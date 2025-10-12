@@ -1231,20 +1231,30 @@ CSet_invert(CSet *cs)
 }
 
 static void
-CSet_merge_helper(CSet *dst, const CSet_Range *r)
-{
-	if (r)
-	{
-		CSet_merge_helper(dst, r->left);
-		CSet_set_range(dst, r->min, r->max);
-		CSet_merge_helper(dst, r->right);
-	}
-}
-
-static void
 CSet_merge(CSet *dst, const CSet *src)
 {
-	CSet_merge_helper(dst, src->ranges);
+	if (!src)
+		return;
+	if (!src->ranges)
+		return;
+
+	// Collect all ranges from src first, then insert them
+	// (cannot recursively walk tree while modifying it)
+	CSet_Range **array = NULL;
+	size_t size = 0;
+	size_t capacity = 0;
+
+	// Cast away const for collection (doesn't modify the tree)
+	CSet_collect_ranges((CSet_Range *) src->ranges, &array, &size,
+			    &capacity);
+
+	for (size_t i = 0; i < size; i++)
+	{
+		CSet_set_range(dst, array[i]->min, array[i]->max);
+	}
+
+	if (array)
+		free(array);
 }
 #endif
 
@@ -2545,9 +2555,16 @@ Compile_firstclosure(Compile *c, const NodeArray *nodes)
 		NInt t = nodes->data[k].type;
 
 		if (t <= WCharMax)
+		{
 			CSet_set(cs, t);
+		}
 		else
-			CSet_merge(cs, c->csets->data[nodes->data[k].args[0]]);
+		{
+			size_t idx = nodes->data[k].args[0];
+
+			if (idx < c->csets->size && c->csets->data[idx])
+				CSet_merge(cs, c->csets->data[idx]);
+		}
 	}
 
 	QSet_free(epsq);
