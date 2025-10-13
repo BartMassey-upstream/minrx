@@ -478,6 +478,58 @@ test_error_cases(void)
 			   0);
 }
 
+static void
+test_uninitialized_regex(void)
+{
+	minrx_regex_t rx1, rx2;
+	minrx_regmatch_t rm[10];
+
+	printf("\n=== Uninitialized Regex ===\n");
+
+	// Test 1: Uninitialized regex_t (like user's code might have)
+	tests_run++;
+	if (minrx_regcomp(&rx1, "hello", MINRX_REG_EXTENDED) == 0) {
+		if (minrx_regexec(&rx1, "hello world", 10, rm, 0) == 0) {
+			if (rm[0].rm_so == 0 && rm[0].rm_eo == 5) {
+				printf("PASS: uninitialized regex_t\n");
+				tests_passed++;
+			} else {
+				printf("FAIL: uninitialized regex_t - wrong match offsets\n");
+				tests_failed++;
+			}
+		} else {
+			printf("FAIL: uninitialized regex_t - no match found\n");
+			tests_failed++;
+		}
+		minrx_regfree(&rx1);
+	} else {
+		printf("FAIL: uninitialized regex_t - compilation failed\n");
+		tests_failed++;
+	}
+
+	// Test 2: Initialized regex_t (explicit zero initialization)
+	rx2 = (minrx_regex_t){0};
+	tests_run++;
+	if (minrx_regcomp(&rx2, "world", MINRX_REG_EXTENDED) == 0) {
+		if (minrx_regexec(&rx2, "hello world", 10, rm, 0) == 0) {
+			if (rm[0].rm_so == 6 && rm[0].rm_eo == 11) {
+				printf("PASS: initialized regex_t\n");
+				tests_passed++;
+			} else {
+				printf("FAIL: initialized regex_t - wrong match offsets\n");
+				tests_failed++;
+			}
+		} else {
+			printf("FAIL: initialized regex_t - no match found\n");
+			tests_failed++;
+		}
+		minrx_regfree(&rx2);
+	} else {
+		printf("FAIL: initialized regex_t - compilation failed\n");
+		tests_failed++;
+	}
+}
+
 int
 main(void)
 {
@@ -499,6 +551,7 @@ main(void)
 	test_complex_patterns();
 	test_edge_cases();
 	test_error_cases();
+	test_uninitialized_regex();
 
 	printf("\n=== Summary ===\n");
 	printf("Total tests: %d\n", tests_run);
