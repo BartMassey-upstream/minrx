@@ -463,7 +463,8 @@ test_error_cases(void)
 	printf("\n=== Error Handling ===\n");
 
 	test_compile_error("error unbalanced (", "(abc", MINRX_REG_EPAREN, 0);
-	test_compile_error("error unbalanced )", "abc)", MINRX_REG_EPAREN, 0);
+	test_match("unbalanced ) treated as literal - match", "abc)", "abc)", 1, 0);
+	test_match("unbalanced ) treated as literal - no match", "abc)", "abc", 0, 0);
 	test_compile_error("error unbalanced [", "[abc", MINRX_REG_EBRACK, 0);
 	test_compile_error("error invalid [^]", "[^]", MINRX_REG_EBRACK, 0);
 	test_compile_error("error unbalanced {", "a{2", MINRX_REG_EBRACE, 0);
