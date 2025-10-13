@@ -1929,6 +1929,9 @@ Compile_chr(Compile *c, int nested, NInt nstk)
 		{
 			NInt n = ++c->nsub;
 
+			// Free the initial empty subexp before overwriting
+			Subexp_free(&result);
+
 			c->wc = WConv_nextchr(&c->wconv);
 			result = Compile_alt(c, 1, nstk + 1);
 			if (result.err)
@@ -3499,8 +3502,9 @@ minrx_regncomp(minrx_regex_t *rx, size_t ns, const char *s, int flags)
 		r->err = MINRX_REG_ESPACE;
 	}
 
-	// Clean up icmap
+	// Clean up icmap and csets
 	Icmap_free(c.icmap);
+	CSetArray_free(c.csets);
 
 	rx->re_regexp = r;
 	rx->re_nsub = r->nsub > 0 ? r->nsub - 1 : 0;
