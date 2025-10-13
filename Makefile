@@ -15,15 +15,55 @@ uninstall: builds/$(TYPE)/meson-info
 builds/$(TYPE)/meson-info:
 	meson setup builds/$(TYPE) --prefix=$(PREFIX) --buildtype=$(TYPE)
 
-# traditional build (requires only make): make tryit
+# traditional build (requires only make)
 CFLAGS=-O3 -Wall
 CXXFLAGS=-std=c++20 -O3 -Wall
-rxgrep: minrx.o rxgrep.o
+
+# C versions (using minrx.c)
+minrx_c.o: minrx.c minrx.h
+	$(CC) $(CFLAGS) -c -o $@ $<
+
+rxgrep_c: minrx_c.o rxgrep.o
+	$(CC) -o $@ $^
+
+tryit_c: minrx_c.o tryit.o
+	$(CC) -o $@ $^
+
+test_minrx_c: minrx_c.o test_minrx.o
+	$(CC) -o $@ $^
+
+test_memory_leaks: minrx_c.o test_memory_leaks.o
+	$(CC) -o $@ $^
+
+# C++ versions (using minrx.cpp)
+minrx_cpp.o: minrx.cpp minrx.h
+	$(CXX) $(CXXFLAGS) -c -o $@ $<
+
+rxgrep_cpp: minrx_cpp.o rxgrep.o
 	$(CXX) -o $@ $^
-tryit: minrx.o tryit.o
+
+tryit_cpp: minrx_cpp.o tryit.o
 	$(CXX) -o $@ $^
+
+test_minrx_cpp: minrx_cpp.o test_minrx.o
+	$(CXX) -o $@ $^
+
+# Default targets (C++ versions for backward compatibility)
+rxgrep: rxgrep_cpp
+	ln -sf $< $@
+
+tryit: tryit_cpp
+	ln -sf $< $@
+
+# Build all versions
+.PHONY: all all-c all-cpp
+all: all-c all-cpp
+
+all-c: rxgrep_c tryit_c test_minrx_c test_memory_leaks
+
+all-cpp: rxgrep_cpp tryit_cpp test_minrx_cpp
 
 # removes both default and traditional build artifacts
 .PHONY: clean
 clean:
-	rm -fr builds *.o rxgrep tryit
+	rm -fr builds *.o rxgrep tryit rxgrep_c rxgrep_cpp tryit_c tryit_cpp test_minrx_c test_minrx_cpp test_memory_leaks
