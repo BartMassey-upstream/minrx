@@ -62,7 +62,9 @@
 
 #define N_(msgid) msgid
 
+#ifndef RE_DUP_MAX
 #define RE_DUP_MAX 32767
+#endif
 
 // Utility functions
 static INLINE int

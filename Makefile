@@ -16,7 +16,7 @@ builds/$(TYPE)/meson-info:
 	meson setup builds/$(TYPE) --prefix=$(PREFIX) --buildtype=$(TYPE)
 
 # traditional build (requires only make)
-CFLAGS=-O3 -Wall
+CFLAGS=-O3 -Wall -Wextra
 CXXFLAGS=-std=c++20 -O3 -Wall
 
 # C versions (using minrx.c)
