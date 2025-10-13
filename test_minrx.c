@@ -216,7 +216,7 @@ test_grouping(void)
 	int offsets2[] = { 0, 2, 0, 1 };
 	test_submatch("submatch nested", "((a))b", "ab", 2, offsets2, 0);
 
-	int offsets3[] = { 1, 3, 1, 2 };
+	int offsets3[] = { 0, 3, 1, 2 };
 	test_submatch("submatch in middle", "x(a)y", "xay", 2, offsets3, 0);
 }
 
