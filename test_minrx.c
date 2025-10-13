@@ -17,7 +17,7 @@ static void
 test_match(const char *name, const char *pattern, const char *text,
 	   int should_match, int flags)
 {
-	minrx_regex_t rx;
+	minrx_regex_t rx = {0};
 	int compile_err, exec_result;
 	char errmsg[100];
 
@@ -59,7 +59,7 @@ static void
 test_submatch(const char *name, const char *pattern, const char *text,
 	      int nsubs, const int *expected_offsets, int flags)
 {
-	minrx_regex_t rx;
+	minrx_regex_t rx = {0};
 	minrx_regmatch_t rm[10];
 	int compile_err, exec_result;
 	char errmsg[100];
@@ -109,7 +109,7 @@ static void
 test_compile_error(const char *name, const char *pattern,
 		   minrx_result_t expected_error, int flags)
 {
-	minrx_regex_t rx;
+	minrx_regex_t rx = {0};
 	int err;
 
 	tests_run++;
