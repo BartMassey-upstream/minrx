@@ -15,7 +15,7 @@ static int leak_test_count = 0;
 // Test successful compilation and execution
 static void test_normal_path(void)
 {
-	minrx_regex_t rx;
+	minrx_regex_t rx = {0};
 	minrx_regmatch_t rm[10];
 
 	test_count++;
@@ -29,7 +29,7 @@ static void test_normal_path(void)
 // Test compilation errors - these should not leak
 static void test_compile_errors(void)
 {
-	minrx_regex_t rx;
+	minrx_regex_t rx = {0};
 
 	// Unbalanced parenthesis
 	test_count++;
@@ -77,7 +77,7 @@ static void test_compile_errors(void)
 // Test no-match cases
 static void test_no_match(void)
 {
-	minrx_regex_t rx;
+	minrx_regex_t rx = {0};
 	minrx_regmatch_t rm[10];
 
 	test_count++;
@@ -91,7 +91,7 @@ static void test_no_match(void)
 // Test complex patterns
 static void test_complex_patterns(void)
 {
-	minrx_regex_t rx;
+	minrx_regex_t rx = {0};
 	minrx_regmatch_t rm[10];
 
 	// Nested groups
@@ -130,7 +130,7 @@ static void test_complex_patterns(void)
 // Test with extensions
 static void test_with_extensions(void)
 {
-	minrx_regex_t rx;
+	minrx_regex_t rx = {0};
 	minrx_regmatch_t rm[10];
 	int flags = MINRX_REG_EXTENDED | MINRX_REG_EXTENSIONS_BSD | MINRX_REG_EXTENSIONS_GNU;
 
@@ -161,7 +161,7 @@ static void test_with_extensions(void)
 // Test with various flags
 static void test_with_flags(void)
 {
-	minrx_regex_t rx;
+	minrx_regex_t rx = {0};
 	minrx_regmatch_t rm[10];
 
 	// Case insensitive
@@ -192,7 +192,7 @@ static void test_with_flags(void)
 // Test multiple compilations without freeing (should not be done, but test it)
 static void test_recompile(void)
 {
-	minrx_regex_t rx;
+	minrx_regex_t rx = {0};
 	minrx_regmatch_t rm[10];
 
 	// Compile, use, compile again without free (BAD PRACTICE but test it)
@@ -212,7 +212,7 @@ static void test_recompile(void)
 // Test with empty patterns and strings
 static void test_edge_cases(void)
 {
-	minrx_regex_t rx;
+	minrx_regex_t rx = {0};
 	minrx_regmatch_t rm[10];
 
 	// Empty pattern
@@ -246,7 +246,7 @@ static void test_edge_cases(void)
 // Test regncomp and regnexec
 static void test_nfunctions(void)
 {
-	minrx_regex_t rx;
+	minrx_regex_t rx = {0};
 	minrx_regmatch_t rm[10];
 	const char *pattern = "abc";
 	const char *text = "xyzabcdef";
@@ -263,7 +263,7 @@ static void test_nfunctions(void)
 static void test_multiple_regexes(void)
 {
 	#define NUM_RX 10
-	minrx_regex_t rxs[NUM_RX];
+	minrx_regex_t rxs[NUM_RX] = {0};
 	minrx_regmatch_t rm[10];
 	int i;
 
@@ -289,7 +289,7 @@ static void test_multiple_regexes(void)
 // Test RESUME flag
 static void test_resume_flag(void)
 {
-	minrx_regex_t rx;
+	minrx_regex_t rx = {0};
 	minrx_regmatch_t rm[10];
 
 	test_count++;

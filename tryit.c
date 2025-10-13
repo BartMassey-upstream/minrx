@@ -50,7 +50,7 @@ main(int argc, char *argv[])
 		fprintf(stderr, "\t--gawk\n\t\tequivalent to -B -G -c -e\n");
 		exit(EXIT_FAILURE);
 	}
-	minrx_regex_t rx;
+	minrx_regex_t rx = {0};
 	int err;
 	if ((err = minrx_regcomp(&rx, argv[1], cflags)) != 0) {
 		char errmsg[100];
