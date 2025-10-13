@@ -1949,7 +1949,11 @@ Compile_chr(Compile *c, int nested, NInt nstk)
 
 	case L')':
 		if (!nested)
-			goto normal;
+		{
+			Subexp_free(&result);
+			result.err = MINRX_REG_EPAREN;
+			return result;
+		}
 		// fall through
 	case L'|':
 	case WConv_End:
