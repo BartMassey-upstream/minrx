@@ -445,7 +445,9 @@ test_edge_cases(void)
 
 	// Special characters in brackets
 	test_match("bracket with ]", "[]]", "]", 1, 0);
-	test_match("bracket with ^", "[^]", "^", 1, 0);
+	test_match("bracket with ^", "[\\^]", "^", 1, 0);
+	test_match("bracket negated with ]", "[^]]", "a", 1, 0);  // matches anything except ]
+	test_match("bracket negated with ] no match", "[^]]", "]", 0, 0);
 
 	// Multiple dots
 	test_match("multiple dots", "...", "abc", 1, 0);
@@ -463,6 +465,7 @@ test_error_cases(void)
 	test_compile_error("error unbalanced (", "(abc", MINRX_REG_EPAREN, 0);
 	test_compile_error("error unbalanced )", "abc)", MINRX_REG_EPAREN, 0);
 	test_compile_error("error unbalanced [", "[abc", MINRX_REG_EBRACK, 0);
+	test_compile_error("error invalid [^]", "[^]", MINRX_REG_EBRACK, 0);
 	test_compile_error("error unbalanced {", "a{2", MINRX_REG_EBRACE, 0);
 	test_compile_error("error bad repetition", "*", MINRX_REG_BADRPT, 0);
 	test_compile_error("error bad repetition +", "+", MINRX_REG_BADRPT, 0);
