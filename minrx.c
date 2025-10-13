@@ -2442,6 +2442,7 @@ Compile_alt(Compile *c, int nested, NInt nstk)
 			NodeArray *mhs = alts[i - 1].nodes;
 			size_t mhmaxstk = alts[i - 1].maxstk;
 			int mhasmin = alts[i - 1].hasmin;
+			size_t mhs_size = mhs->size;  // Save size before freeing
 
 			NodeArray_insert_array(rhs, 0, mhs);
 			NodeArray_free(mhs);
@@ -2450,7 +2451,7 @@ Compile_alt(Compile *c, int nested, NInt nstk)
 			rhasmin |= mhasmin;
 
 			Node goto_node2 =
-			    { Node_Goto, {mhs->size, rhs->size + 1},
+			    { Node_Goto, {mhs_size, rhs->size + 1},
 			    nstk + 1 };
 			NodeArray_push_front(rhs, goto_node2);
 		}
