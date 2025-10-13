@@ -2724,6 +2724,10 @@ Compile_compile(Compile *c)
 	r->nodes = lh.nodes;
 	lh.nodes = NULL;
 
+	// Compute first character set BEFORE transferring csets
+	// (Compile_firstclosure needs access to c->csets)
+	CSet *firstcset = Compile_firstclosure(c, r->nodes);
+
 	// Transfer csets
 	CSetArray_free(r->csets);
 	r->csets = c->csets;
@@ -2733,8 +2737,8 @@ Compile_compile(Compile *c)
 	r->nstk = lh.maxstk;
 	r->nsub = c->nsub + 1;
 
-	// Compute first character set
-	r->firstcset = Compile_firstclosure(c, r->nodes);
+	// Set first character set and compute first bytes
+	r->firstcset = firstcset;
 	Compile_compute_firstbytes(r);
 
 	return r;
