@@ -271,12 +271,12 @@ test_anchors(void)
 	// Beginning of line (^)
 	test_match("anchor BOL match", "^abc", "abc", 1, 0);
 	test_match("anchor BOL no match", "^abc", "xabc", 0, 0);
-	test_match("anchor BOL in middle", "x^a", "x^a", 1, 0);	// ^ literal in middle
+	test_match("anchor BOL in middle", "x\\^a", "x^a", 1, 0);	// escaped ^ literal
 
 	// End of line ($)
 	test_match("anchor EOL match", "abc$", "abc", 1, 0);
 	test_match("anchor EOL no match", "abc$", "abcx", 0, 0);
-	test_match("anchor EOL in middle", "a$x", "a$x", 1, 0);	// $ literal in middle
+	test_match("anchor EOL in middle", "a\\$x", "a$x", 1, 0);	// escaped $ literal
 
 	// Both anchors
 	test_match("anchor BOL+EOL exact", "^abc$", "abc", 1, 0);
