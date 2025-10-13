@@ -189,21 +189,20 @@ static void test_with_flags(void)
 	}
 }
 
-// Test multiple compilations without freeing (should not be done, but test it)
+// Test multiple compilations with proper cleanup
 static void test_recompile(void)
 {
 	minrx_regex_t rx = {0};
 	minrx_regmatch_t rm[10];
 
-	// Compile, use, compile again without free (BAD PRACTICE but test it)
+	// Compile, use, free, then compile again (correct usage)
 	test_count++;
 	if (minrx_regcomp(&rx, "abc", MINRX_REG_EXTENDED) == 0) {
 		minrx_regexec(&rx, "abc", 10, rm, 0);
-		// Don't free here - deliberately test recompile
-		// This should NOT leak if minrx is robust
+		minrx_regfree(&rx);  // Free before recompiling
 		if (minrx_regcomp(&rx, "def", MINRX_REG_EXTENDED) == 0) {
 			minrx_regexec(&rx, "def", 10, rm, 0);
-			minrx_regfree(&rx);  // Only free once at end
+			minrx_regfree(&rx);
 		}
 		leak_test_count++;
 	}
