@@ -76,6 +76,9 @@ bool do_filenames = false;	// include filename in output
 bool use_minrx = true;		// false if USE_LIBC_REGEX
 size_t total;
 
+char *patterns_buffer = NULL;	// buffer for patterns from file (needs freeing)
+char **pattern_list = NULL;	// global to track for cleanup
+
 static void parse_args(int argc, char **argv);
 static void usage(int exit_status);
 static void version(void);
@@ -96,8 +99,8 @@ static void set_syntax_flags(void);
 int
 main(int argc, char **argv)
 {
-	char **pattern_list = NULL;
 	int i;
+	int exit_status;
 
 	(void) setlocale(LC_ALL, "");
 
@@ -147,7 +150,25 @@ main(int argc, char **argv)
 		}
 	}
 
-	return total != 0 ? EXIT_SUCCESS : EXIT_FAILURE;
+	exit_status = total != 0 ? EXIT_SUCCESS : EXIT_FAILURE;
+
+	// Cleanup allocated memory
+	if (use_minrx && minrx_regexps != NULL) {
+		for (i = 0; i < (int)num_regexps; i++)
+			minrx_regfree(&minrx_regexps[i]);
+		free(minrx_regexps);
+	}
+	if (!use_minrx && regexps != NULL) {
+		for (i = 0; i < (int)num_regexps; i++)
+			regfree(&regexps[i]);
+		free(regexps);
+	}
+	if (pattern_list != NULL)
+		free(pattern_list);
+	if (patterns_buffer != NULL)
+		free(patterns_buffer);
+
+	return exit_status;
 }
 
 /* set_syntax flags --- choose syntax bits */
@@ -479,6 +500,7 @@ get_patterns(const char *filename)
 	buffer[sbuf.st_size] = '\0';
 
 	result = build_pattern_list(buffer);
+	patterns_buffer = buffer;  // track for cleanup
 	return result;
 }
 
