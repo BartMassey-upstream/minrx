@@ -2833,8 +2833,7 @@ Execute_add(Execute *e, QVec *ncsv, NInt k, NInt nstk, const NState *ns,
 				    COWVec_copy((COWVec *) & ns->substack);
 				newns->gen = e->gen;
 				newns->boff = ns->boff;
-				if (!newly)
-					COWVec_free(&old);
+				COWVec_free(&old);
 			}
 			else
 			{
@@ -2866,8 +2865,7 @@ Execute_add(Execute *e, QVec *ncsv, NInt k, NInt nstk, const NState *ns,
 			    COWVec_copy((COWVec *) & ns->substack);
 			newns->gen = e->gen;
 			newns->boff = ns->boff;
-			if (!newly)
-				COWVec_free(&old);
+			COWVec_free(&old);
 		}
 		else
 		{
@@ -3462,6 +3460,12 @@ minrx_regexec(minrx_regex_t *rx, const char *s, size_t nm,
 int
 minrx_regncomp(minrx_regex_t *rx, size_t ns, const char *s, int flags)
 {
+	// Free any existing compiled regex to prevent leaks on recompilation
+	if (rx->re_regexp != NULL) {
+		Regexp_free((Regexp *) rx->re_regexp);
+		rx->re_regexp = NULL;
+	}
+
 	WConv_Encoding enc = WConv_Encoding_MBtoWC;
 	const char *loc = setlocale(LC_CTYPE, NULL);
 
