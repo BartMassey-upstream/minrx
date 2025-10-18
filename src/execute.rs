@@ -308,7 +308,16 @@ impl<'a> Executor<'a> {
                 NodeType::Exit => {
                     let b = ns_clone.boff;
                     let e = self.off;
-                    if self.best.is_none() || b < self.best.as_ref().unwrap().get(self.suboff) {
+                    let should_update = if let Some(ref best) = self.best {
+                        let best_b = best.get(self.suboff);
+                        let best_e = best.get(self.suboff + 1);
+                        // Accept new match if: earlier start (leftmost) OR same start but longer (greedy)
+                        b < best_b || (b == best_b && e > best_e)
+                    } else {
+                        true // No previous match
+                    };
+
+                    if should_update {
                         let mut new_best = ns_clone.substack.clone();
                         new_best.put(self.suboff, b);
                         new_best.put(self.suboff + 1, e);
