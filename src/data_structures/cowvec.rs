@@ -2,8 +2,8 @@
 //!
 //! Provides efficient cloning with deferred copying until modification.
 
-use std::rc::Rc;
 use std::cmp::Ordering;
+use std::rc::Rc;
 
 /// Copy-on-Write Vector
 ///

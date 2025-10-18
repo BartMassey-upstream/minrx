@@ -25,14 +25,14 @@ pub enum NodeType {
     SubR,
 
     // Zero-width assertions
-    ZBOB,  // Beginning of buffer
-    ZEOB,  // End of buffer
-    ZBOL,  // Beginning of line
-    ZEOL,  // End of line
-    ZBOW,  // Beginning of word
-    ZEOW,  // End of word
-    ZXOW,  // Either end of word (word boundary)
-    ZNWB,  // Not word boundary
+    ZBOB, // Beginning of buffer
+    ZEOB, // End of buffer
+    ZBOL, // Beginning of line
+    ZEOL, // End of line
+    ZBOW, // Beginning of word
+    ZEOW, // End of word
+    ZXOW, // Either end of word (word boundary)
+    ZNWB, // Not word boundary
 }
 
 #[derive(Debug, Clone)]
@@ -44,7 +44,11 @@ pub struct Node {
 
 impl Node {
     pub fn new(node_type: NodeType, args: [NInt; 2], nstk: NInt) -> Self {
-        Self { node_type, args, nstk }
+        Self {
+            node_type,
+            args,
+            nstk,
+        }
     }
 
     pub fn char_node(c: char, nstk: NInt) -> Self {

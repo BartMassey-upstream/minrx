@@ -2,7 +2,7 @@
 //!
 //! Handles character classes, bracket expressions, and character ranges.
 
-use crate::{RegexError, CompileFlags};
+use crate::{CompileFlags, RegexError};
 use std::collections::BTreeSet;
 
 #[derive(Debug, Clone, PartialEq)]
@@ -67,7 +67,8 @@ impl CSet {
         for range in self.ranges.iter() {
             // Check if ranges overlap (with adjacent merging)
             if !(chi < char::from_u32(range.min as u32 - 1).unwrap_or('\0')
-                || clo > char::from_u32(range.max as u32 + 1).unwrap_or(char::MAX)) {
+                || clo > char::from_u32(range.max as u32 + 1).unwrap_or(char::MAX))
+            {
                 overlapping.push(range.clone());
             }
         }
@@ -241,7 +242,11 @@ impl CSet {
         self.set_range('A', 'F');
     }
 
-    pub fn parse(&mut self, flags: CompileFlags, chars: &mut std::iter::Peekable<std::str::Chars>) -> Result<(), RegexError> {
+    pub fn parse(
+        &mut self,
+        flags: CompileFlags,
+        chars: &mut std::iter::Peekable<std::str::Chars>,
+    ) -> Result<(), RegexError> {
         let mut c_opt = chars.next();
         let inv = c_opt == Some('^');
         if inv {
@@ -380,7 +385,12 @@ impl CSet {
             let lo = self.utf8_first_byte(range.min);
             let hi = self.utf8_first_byte(range.max);
 
-            for (b, byte) in bytes.iter_mut().enumerate().skip(lo).take(hi.min(255) - lo + 1) {
+            for (b, byte) in bytes
+                .iter_mut()
+                .enumerate()
+                .skip(lo)
+                .take(hi.min(255) - lo + 1)
+            {
                 if !*byte {
                     *byte = true;
                     count += 1;

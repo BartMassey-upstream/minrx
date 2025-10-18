@@ -31,15 +31,15 @@
 
 use std::collections::HashMap;
 
-mod data_structures;
-mod cset;
-mod node;
 mod compile;
+mod cset;
+mod data_structures;
 mod execute;
 pub mod ffi;
+mod node;
 
-pub use data_structures::{QSet, QVec, COWVec};
 pub use cset::CSet;
+pub use data_structures::{COWVec, QSet, QVec};
 pub use node::{Node, NodeType};
 
 const RE_DUP_MAX: usize = 32767;
@@ -158,7 +158,11 @@ impl Regex {
     }
 
     pub fn nsub(&self) -> usize {
-        if self.nsub > 0 { self.nsub - 1 } else { 0 }
+        if self.nsub > 0 {
+            self.nsub - 1
+        } else {
+            0
+        }
     }
 }
 

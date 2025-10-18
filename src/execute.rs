@@ -2,9 +2,9 @@
 //!
 //! Executes compiled regular expressions against input text.
 
-use crate::*;
+use crate::data_structures::{COWVec, QSet, QVec};
 use crate::node::NodeType;
-use crate::data_structures::{QSet, QVec, COWVec};
+use crate::*;
 use std::iter::Peekable;
 use std::str::Chars;
 
@@ -70,7 +70,10 @@ impl<'a> Executor<'a> {
     }
 
     pub fn execute(&mut self) -> Result<Vec<RegMatch>, RegexError> {
-        let mut mcsvs = [QVec::new(self.regex.nodes.len()), QVec::new(self.regex.nodes.len())];
+        let mut mcsvs = [
+            QVec::new(self.regex.nodes.len()),
+            QVec::new(self.regex.nodes.len()),
+        ];
 
         let mut next_char = self.chars.peek().copied();
 
@@ -131,7 +134,14 @@ impl<'a> Executor<'a> {
         }
     }
 
-    fn add(&mut self, ncsv: &mut QVec<NState>, k: usize, _nstk: usize, ns: &NState, next_char: Option<char>) {
+    fn add(
+        &mut self,
+        ncsv: &mut QVec<NState>,
+        k: usize,
+        _nstk: usize,
+        ns: &NState,
+        next_char: Option<char>,
+    ) {
         if k >= self.regex.nodes.len() {
             return;
         }
@@ -140,8 +150,10 @@ impl<'a> Executor<'a> {
 
         let debug = std::env::var("MINRX_DEBUG").is_ok();
         if debug {
-            eprintln!("[add] k={} nstk={} gen={} off={} node={:?} next_char={:?}",
-                     k, _nstk, self.gen, self.off, node.node_type, next_char);
+            eprintln!(
+                "[add] k={} nstk={} gen={} off={} node={:?} next_char={:?}",
+                k, _nstk, self.gen, self.off, node.node_type, next_char
+            );
         }
 
         match node.node_type {
@@ -159,15 +171,23 @@ impl<'a> Executor<'a> {
                         // Update if newer generation or better state
                         if let Some(ref existing) = *slot {
                             let existing_gen = existing.gen;
-                            if self.gen > existing.gen || (self.gen == existing.gen && ns.boff < existing.boff) {
+                            if self.gen > existing.gen
+                                || (self.gen == existing.gen && ns.boff < existing.boff)
+                            {
                                 let mut new_state = ns.clone_state();
                                 new_state.gen = self.gen;
                                 *slot = Some(new_state);
                                 if debug {
-                                    eprintln!("  -> Char matched '{:?}', updated in ncsv (gen {} > {})", c, self.gen, existing_gen);
+                                    eprintln!(
+                                        "  -> Char matched '{:?}', updated in ncsv (gen {} > {})",
+                                        c, self.gen, existing_gen
+                                    );
                                 }
                             } else if debug {
-                                eprintln!("  -> Char matched '{:?}', skipped (existing gen {})", c, existing_gen);
+                                eprintln!(
+                                    "  -> Char matched '{:?}', skipped (existing gen {})",
+                                    c, existing_gen
+                                );
                             }
                         }
                     }
@@ -185,13 +205,18 @@ impl<'a> Executor<'a> {
                                 new_state.gen = self.gen;
                                 *slot = Some(new_state);
                                 if debug {
-                                    eprintln!("  -> CSet matched '{:?}', added to ncsv (newly)", nc);
+                                    eprintln!(
+                                        "  -> CSet matched '{:?}', added to ncsv (newly)",
+                                        nc
+                                    );
                                 }
                             } else {
                                 // Update if newer generation or better state
                                 if let Some(ref existing) = *slot {
                                     let existing_gen = existing.gen;
-                                    if self.gen > existing.gen || (self.gen == existing.gen && ns.boff < existing.boff) {
+                                    if self.gen > existing.gen
+                                        || (self.gen == existing.gen && ns.boff < existing.boff)
+                                    {
                                         let mut new_state = ns.clone_state();
                                         new_state.gen = self.gen;
                                         *slot = Some(new_state);
@@ -199,7 +224,10 @@ impl<'a> Executor<'a> {
                                             eprintln!("  -> CSet matched '{:?}', updated in ncsv (gen {} > {})", nc, self.gen, existing_gen);
                                         }
                                     } else if debug {
-                                        eprintln!("  -> CSet matched '{:?}', skipped (existing gen {})", nc, existing_gen);
+                                        eprintln!(
+                                            "  -> CSet matched '{:?}', skipped (existing gen {})",
+                                            nc, existing_gen
+                                        );
                                     }
                                 }
                             }
@@ -223,17 +251,25 @@ impl<'a> Executor<'a> {
                     // Update if newer generation or better state
                     if let Some(ref existing) = *slot {
                         let existing_gen = existing.gen;
-                        if self.gen > existing.gen || (self.gen == existing.gen && ns.boff < existing.boff) {
+                        if self.gen > existing.gen
+                            || (self.gen == existing.gen && ns.boff < existing.boff)
+                        {
                             let mut new_state = ns.clone_state();
                             new_state.gen = self.gen;
                             *slot = Some(new_state);
                             if debug {
-                                eprintln!("  -> Epsilon node updated in epsv (gen {} > {})", self.gen, existing_gen);
+                                eprintln!(
+                                    "  -> Epsilon node updated in epsv (gen {} > {})",
+                                    self.gen, existing_gen
+                                );
                             }
                             true
                         } else {
                             if debug {
-                                eprintln!("  -> Epsilon node skipped (existing gen {})", existing_gen);
+                                eprintln!(
+                                    "  -> Epsilon node skipped (existing gen {})",
+                                    existing_gen
+                                );
                             }
                             false
                         }
@@ -291,8 +327,9 @@ impl<'a> Executor<'a> {
                         kk = kk + 1 + self.regex.nodes[kk].args[0];
 
                         // Stop when we reach a Join node
-                        if kk >= self.regex.nodes.len() ||
-                           matches!(self.regex.nodes[kk].node_type, NodeType::Join) {
+                        if kk >= self.regex.nodes.len()
+                            || matches!(self.regex.nodes[kk].node_type, NodeType::Join)
+                        {
                             break;
                         }
                     }
@@ -327,8 +364,12 @@ impl<'a> Executor<'a> {
                             || ns_clone.substack.get(self.suboff + node.args[0] * 2) == usize::MAX)
                     {
                         let mut nscopy = ns_clone.clone_state();
-                        nscopy.substack.put(self.suboff + node.args[0] * 2, ns_clone.substack.get(nstk));
-                        nscopy.substack.put(self.suboff + node.args[0] * 2 + 1, self.off);
+                        nscopy
+                            .substack
+                            .put(self.suboff + node.args[0] * 2, ns_clone.substack.get(nstk));
+                        nscopy
+                            .substack
+                            .put(self.suboff + node.args[0] * 2 + 1, self.off);
                         self.add(ncsv, k + 1, nstk, &nscopy, next_char);
                     } else {
                         // Still need to continue execution even if we don't save the submatch
@@ -349,13 +390,17 @@ impl<'a> Executor<'a> {
                     }
                 }
                 NodeType::ZBOL => {
-                    if (self.off == 0 && !self.flags.contains(ExecFlags::NOTBOL)) || self.prev_char == Some('\n') {
+                    if (self.off == 0 && !self.flags.contains(ExecFlags::NOTBOL))
+                        || self.prev_char == Some('\n')
+                    {
                         let nscopy = ns_clone.clone_state();
                         self.add(ncsv, k + 1, nstk, &nscopy, next_char);
                     }
                 }
                 NodeType::ZEOL => {
-                    if (next_char.is_none() && !self.flags.contains(ExecFlags::NOTEOL)) || next_char == Some('\n') {
+                    if (next_char.is_none() && !self.flags.contains(ExecFlags::NOTEOL))
+                        || next_char == Some('\n')
+                    {
                         let nscopy = ns_clone.clone_state();
                         self.add(ncsv, k + 1, nstk, &nscopy, next_char);
                     }
@@ -365,7 +410,10 @@ impl<'a> Executor<'a> {
                     // Store 3 values on stack: [nstk-3]=off, [nstk-2]=-1, [nstk-1]=off
                     let debug = std::env::var("MINRX_DEBUG").is_ok();
                     if debug {
-                        eprintln!("[Loop] k={} args=[{},{}] entering loop", k, node.args[0], node.args[1]);
+                        eprintln!(
+                            "[Loop] k={} args=[{},{}] entering loop",
+                            k, node.args[0], node.args[1]
+                        );
                     }
                     let mut nscopy1 = ns_clone.clone_state();
                     nscopy1.substack.put(nstk - 3, self.off);
@@ -376,7 +424,11 @@ impl<'a> Executor<'a> {
                     // If args[1] is 1 (optional), also add branch that skips the loop
                     if node.args[1] == 1 {
                         if debug {
-                            eprintln!("[Loop] k={} optional, also adding skip branch to k={}", k, k + 1 + node.args[0]);
+                            eprintln!(
+                                "[Loop] k={} optional, also adding skip branch to k={}",
+                                k,
+                                k + 1 + node.args[0]
+                            );
                         }
                         let mut nscopy2 = ns_clone.clone_state();
                         nscopy2.substack.put(nstk - 3, self.off);
@@ -389,7 +441,10 @@ impl<'a> Executor<'a> {
                     // Next node: exit the loop or loop back if infinite and made progress
                     let debug = std::env::var("MINRX_DEBUG").is_ok();
                     if debug {
-                        eprintln!("[Next] k={} args=[{},{}] exiting loop", k, node.args[0], node.args[1]);
+                        eprintln!(
+                            "[Next] k={} args=[{},{}] exiting loop",
+                            k, node.args[0], node.args[1]
+                        );
                     }
                     let nscopy1 = ns_clone.clone_state();
                     self.add(ncsv, k + 1, nstk, &nscopy1, next_char);
@@ -403,7 +458,11 @@ impl<'a> Executor<'a> {
                         }
                         if self.off > loop_start_off {
                             if debug {
-                                eprintln!("[Next] k={} made progress, looping back to k={}", k, k - node.args[0]);
+                                eprintln!(
+                                    "[Next] k={} made progress, looping back to k={}",
+                                    k,
+                                    k - node.args[0]
+                                );
                             }
                             let mut nscopy2 = ns_clone.clone_state();
                             // Copy the three values and update the last one
@@ -472,10 +531,9 @@ impl<'a> Executor<'a> {
                     let next_is_word = next_char.map(Self::is_word_char).unwrap_or(false);
 
                     // Match if: (start AND end) OR (start AND not word after) OR (end AND not word before) OR (both same type)
-                    let matches = (at_start && at_end) ||
-                                  (at_start && !at_end && !next_is_word) ||
-                                  (!at_start && !prev_is_word && at_end) ||
-                                  (!at_start && !at_end && prev_is_word == next_is_word);
+                    let matches = at_start && (at_end || !next_is_word)
+                        || at_end && !prev_is_word
+                        || (!at_start && !at_end && prev_is_word == next_is_word);
 
                     if matches {
                         let nscopy = ns_clone.clone_state();

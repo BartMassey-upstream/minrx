@@ -2,9 +2,9 @@
 //!
 //! Compiles pattern strings into internal node representations.
 
-use crate::*;
 use crate::cset::CSet;
 use crate::node::{Node, NodeType};
+use crate::*;
 use std::collections::VecDeque;
 use std::iter::Peekable;
 use std::str::Chars;
@@ -57,7 +57,9 @@ impl<'a> Compiler<'a> {
     }
 
     pub fn compile(mut self) -> Result<Regex, RegexError> {
-        if self.flags.contains(CompileFlags::MINDISABLE) && self.flags.contains(CompileFlags::MINIMAL) {
+        if self.flags.contains(CompileFlags::MINDISABLE)
+            && self.flags.contains(CompileFlags::MINIMAL)
+        {
             return Err(RegexError::BadPat);
         }
 
@@ -153,7 +155,10 @@ impl<'a> Compiler<'a> {
             return (lhs, lhmaxstk, lhasmin, err);
         }
 
-        while self.current.is_some() && self.current != Some('|') && (self.current != Some(')') || !nested) {
+        while self.current.is_some()
+            && self.current != Some('|')
+            && (self.current != Some(')') || !nested)
+        {
             let (rhs, rhmaxstk, rhasmin, err) = self.rep(nested, nstk);
             if err != RegexError::Success {
                 return (rhs, rhmaxstk, rhasmin, err);
@@ -190,8 +195,10 @@ impl<'a> Compiler<'a> {
                     let debug = std::env::var("MINRX_DEBUG").is_ok();
                     let peek_val = self.peek_char();
                     if debug {
-                        eprintln!("[rep] Found '{{' at position, current={:?}, peek={:?}",
-                                 self.current, peek_val);
+                        eprintln!(
+                            "[rep] Found '{{' at position, current={:?}, peek={:?}",
+                            self.current, peek_val
+                        );
                     }
                     // Check if this should be treated as repetition or literal
                     if self.flags.contains(CompileFlags::BRACE_COMPAT) {
@@ -215,13 +222,13 @@ impl<'a> Compiler<'a> {
                                 eprintln!("[rep] Brace repetition parsed successfully");
                             }
                             lh = result
-                        },
+                        }
                         Err(err) => {
                             if debug {
                                 eprintln!("[rep] Brace repetition failed: {:?}", err.3);
                             }
-                            return err
-                        },
+                            return err;
+                        }
                     }
                 }
                 _ => return lh,
@@ -258,16 +265,32 @@ impl<'a> Compiler<'a> {
                 };
                 if self.current != Some('}') {
                     // If we hit EOF, it's an unbalanced brace, otherwise invalid contents
-                    return Err((VecDeque::new(), 0, false,
-                        if self.current.is_none() { RegexError::EBrace } else { RegexError::BadBr }));
+                    return Err((
+                        VecDeque::new(),
+                        0,
+                        false,
+                        if self.current.is_none() {
+                            RegexError::EBrace
+                        } else {
+                            RegexError::BadBr
+                        },
+                    ));
                 }
                 self.next_char();
                 Ok(self.mkrep_count(lh, m, n, nstk))
             }
         } else {
             // If we hit EOF, it's an unbalanced brace, otherwise invalid contents
-            Err((VecDeque::new(), 0, false,
-                if self.current.is_none() { RegexError::EBrace } else { RegexError::BadBr }))
+            Err((
+                VecDeque::new(),
+                0,
+                false,
+                if self.current.is_none() {
+                    RegexError::EBrace
+                } else {
+                    RegexError::BadBr
+                },
+            ))
         }
     }
 
@@ -278,7 +301,9 @@ impl<'a> Compiler<'a> {
         while let Some(c) = self.current {
             if c.is_ascii_digit() {
                 has_digits = true;
-                num = num.saturating_mul(10).saturating_add((c as usize) - ('0' as usize));
+                num = num
+                    .saturating_mul(10)
+                    .saturating_add((c as usize) - ('0' as usize));
                 self.next_char();
             } else {
                 break;
@@ -310,8 +335,16 @@ impl<'a> Compiler<'a> {
                 node.nstk += 3;
             }
             let lhsize = lhs.len();
-            lhs.push_front(Node::new(NodeType::Loop, [lhsize, if optional { 1 } else { 0 }], nstk + 3));
-            lhs.push_back(Node::new(NodeType::Next, [lhsize, if infinite { 1 } else { 0 }], nstk));
+            lhs.push_front(Node::new(
+                NodeType::Loop,
+                [lhsize, if optional { 1 } else { 0 }],
+                nstk + 3,
+            ));
+            lhs.push_back(Node::new(
+                NodeType::Next,
+                [lhsize, if infinite { 1 } else { 0 }],
+                nstk,
+            ));
             (lhs, lhmaxstk + 3, lhasmin, RegexError::Success)
         }
     }
@@ -382,7 +415,12 @@ impl<'a> Compiler<'a> {
 
         // If m == 0, wrap everything in a Skip to make it optional
         if m == 0 {
-            return self.mkrep((lhs, maxstk, lhasmin, RegexError::Success), true, false, nstk);
+            return self.mkrep(
+                (lhs, maxstk, lhasmin, RegexError::Success),
+                true,
+                false,
+                nstk,
+            );
         }
 
         (lhs, maxstk, lhasmin, RegexError::Success)
@@ -393,7 +431,10 @@ impl<'a> Compiler<'a> {
         let lhmaxstk = nstk;
 
         match self.current {
-            Some(c) if c.is_alphanumeric() || c.is_ascii_punctuation() && !"*+?|()[]{}^$.\\".contains(c) => {
+            Some(c)
+                if c.is_alphanumeric()
+                    || c.is_ascii_punctuation() && !"*+?|()[]{}^$.\\".contains(c) =>
+            {
                 // Regular character
                 self.handle_char(c, &mut lhs, nstk);
                 self.next_char();

@@ -168,7 +168,11 @@ pub unsafe extern "C" fn minrx_regerror(
     if !errbuf.is_null() && errbuf_size > 0 {
         unsafe {
             let copy_len = (len + 1).min(errbuf_size);
-            ptr::copy_nonoverlapping(message_bytes.as_ptr() as *const c_char, errbuf, copy_len - 1);
+            ptr::copy_nonoverlapping(
+                message_bytes.as_ptr() as *const c_char,
+                errbuf,
+                copy_len - 1,
+            );
             *errbuf.add(copy_len - 1) = 0;
         }
     }
@@ -193,9 +197,7 @@ pub unsafe extern "C" fn minrx_regncomp(
         return RegexError::BadPat as c_int;
     }
 
-    let pattern_slice = unsafe {
-        std::slice::from_raw_parts(pattern as *const u8, npattern)
-    };
+    let pattern_slice = unsafe { std::slice::from_raw_parts(pattern as *const u8, npattern) };
 
     let pattern_str = match std::str::from_utf8(pattern_slice) {
         Ok(s) => s,
@@ -247,9 +249,7 @@ pub unsafe extern "C" fn minrx_regnexec(
         &*regex_ptr
     };
 
-    let text_slice = unsafe {
-        std::slice::from_raw_parts(text as *const u8, ntext)
-    };
+    let text_slice = unsafe { std::slice::from_raw_parts(text as *const u8, ntext) };
 
     let text_str = match std::str::from_utf8(text_slice) {
         Ok(s) => s,
