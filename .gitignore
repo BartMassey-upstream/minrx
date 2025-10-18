@@ -1,3 +1,42 @@
+# Rust build artifacts
+/target/
+*.rlib
+Cargo.lock
+
+# C/C++ build artifacts
+*.o
+*.a
+*.so
+*.so.*
+*.dylib
+*.dll
+*.exe
+
+# Test executables (all variants)
+test_minrx
+test_minrx_rust
+test_minrx_c
+test_minrx_cpp
+test_memory_leaks
+test_uninit
+test_*
+
+# Utility programs
+rxgrep
+rxgrep_c
+rxgrep_cpp
+tryit
+tryit_c
+tryit_cpp
+
+# IDE and build directories
 /builds/
 /.idea/
-/tryit
+
+# Valgrind and debug logs
+*.log
+valgrind*.txt
+
+# Binary files (catch-all)
+*.bin
+*.elf

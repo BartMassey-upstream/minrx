@@ -6,6 +6,12 @@ MinRX is library for matching
 [POSIX Extended Regular Expressions](https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap09.html#tag_09_04)
 (EREs).
 
+**Note**: This repository now contains three implementations of MinRX:
+the original C++ version, a C conversion, and a Rust conversion. All
+three export the same C API and pass the same test suite. See
+[CONVERSIONS.md](CONVERSIONS.md) for details on building and using
+each version.
+
 MinRX is written in C++ 20, but exports a C API similar to the POSIX
 [`<regex.h>`](https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/regex.h.html)
 functions, with C entry points for both counted and NUL-terminated
@@ -15,9 +21,9 @@ counterparts.
 
 My goal for MinRX is to eventually have performance competitive with
 the fastest extant matchers, but for now the development focus is on
-correctness and simplicity.  When I am confident that the core algorithm
-is stable and well-tested, I plan to rewrite MinRX in C to improve
-portability and perhaps further reduce resource usage.
+correctness and simplicity.  The library has now been successfully
+converted to both C and Rust, offering improved portability (C) and
+memory safety guarantees (Rust) while maintaining the same API.
 
 MinRX attempts to implement the `LC_CTYPE`-dependent locale features
 specified for POSIX regular expressions (with some limitations because
@@ -129,8 +135,6 @@ Currently planned work:
   to any deterministic *finite* automaton, but it is equivalent to a
   "deterministic *infinite* automaton", and it might be feasible to cache
   a useful working subset of this infinite automaton's states.
-
-* Rewrite in C for improved portability.
 
 ## License
 

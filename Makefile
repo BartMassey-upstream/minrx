@@ -55,15 +55,29 @@ rxgrep: rxgrep_cpp
 tryit: tryit_cpp
 	ln -sf $< $@
 
+# Rust version (using cargo)
+.PHONY: rust-lib
+rust-lib:
+	cargo build --release
+
+test_minrx: test_minrx.c rust-lib
+	$(CC) $(CFLAGS) -I. -o $@ $< -L./target/release -lminrx -Wl,-rpath,./target/release
+
+test_minrx_rust: test_minrx
+	ln -sf $< $@
+
 # Build all versions
-.PHONY: all all-c all-cpp
+.PHONY: all all-c all-cpp all-rust
 all: all-c all-cpp
 
 all-c: rxgrep_c tryit_c test_minrx_c test_memory_leaks
 
 all-cpp: rxgrep_cpp tryit_cpp test_minrx_cpp
 
+all-rust: test_minrx test_minrx_rust
+
 # removes both default and traditional build artifacts
 .PHONY: clean
 clean:
-	rm -fr builds *.o rxgrep tryit rxgrep_c rxgrep_cpp tryit_c tryit_cpp test_minrx_c test_minrx_cpp test_memory_leaks
+	rm -fr builds *.o rxgrep tryit rxgrep_c rxgrep_cpp tryit_c tryit_cpp test_minrx test_minrx_rust test_minrx_c test_minrx_cpp test_memory_leaks
+	cargo clean
