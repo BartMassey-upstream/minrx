@@ -130,6 +130,8 @@
 //! OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 //! SUCH DAMAGE.
 
+// Allow dead code for internal types and methods that are part of the implementation
+// but may not be used in all code paths (e.g., some data structure methods, node variants)
 #![allow(dead_code)]
 
 use std::collections::HashMap;
@@ -141,9 +143,8 @@ mod execute;
 pub mod ffi;
 mod node;
 
-pub use cset::CSet;
-pub use data_structures::{COWVec, QSet, QVec};
-pub use node::{Node, NodeType};
+pub(crate) use cset::CSet;
+pub(crate) use node::Node;
 
 const RE_DUP_MAX: usize = 32767;
 
@@ -192,10 +193,10 @@ impl RegexError {
     }
 }
 
-/// Flags for regex compilation
-///
-/// These flags control how the pattern is interpreted during compilation.
 bitflags::bitflags! {
+    /// Flags for regex compilation
+    ///
+    /// These flags control how the pattern is interpreted during compilation.
     #[derive(Clone, Copy, Debug, PartialEq, Eq)]
     pub struct CompileFlags: u32 {
         const EXTENDED = 1;
@@ -212,10 +213,10 @@ bitflags::bitflags! {
     }
 }
 
-/// Flags for regex execution
-///
-/// These flags control how the match is performed.
 bitflags::bitflags! {
+    /// Flags for regex execution
+    ///
+    /// These flags control how the match is performed.
     #[derive(Clone, Copy, Debug, PartialEq, Eq)]
     pub struct ExecFlags: u32 {
         const NOTBOL = 1;

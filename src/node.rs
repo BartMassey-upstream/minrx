@@ -4,6 +4,8 @@
 
 pub type NInt = usize;
 
+// Allow uppercase acronyms to match C++ implementation naming (ZBOB = Zero-width Beginning Of Buffer, etc.)
+#[allow(clippy::upper_case_acronyms)]
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum NodeType {
     // Character-matching nodes
