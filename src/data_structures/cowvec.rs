@@ -7,7 +7,7 @@ use std::rc::Rc;
 
 /// Copy-on-Write Vector
 ///
-/// Simple wrapper around Rc<Vec<T>> that clones on write.
+/// Simple wrapper around `Rc<Vec<T>>` that clones on write.
 /// We use Rc instead of std::borrow::Cow because:
 /// 1. Multiple owners can share the same data (Rc reference counting)
 /// 2. No lifetime parameters needed (important for state machine)

@@ -165,9 +165,45 @@ gcc -o myprogram myprogram.c -L./target/release -lminrx \
 
 ### Using the Rust Library from Rust
 
-While the library exports a C API, you can also use the internal
-Rust API directly by importing it as a dependency. However, note
-that the internal API is currently not stabilized and may change.
+The library provides a native Rust API that is fully documented with rustdoc.
+
+#### Viewing the Documentation
+
+To build and view the Rust API documentation:
+
+```bash
+cargo doc --no-deps --open
+```
+
+This will build the documentation and open it in your web browser.
+
+#### Native Rust API Example
+
+```rust
+use minrx::{Regex, CompileFlags, ExecFlags};
+
+fn main() -> Result<(), minrx::RegexError> {
+    // Compile a regex
+    let pattern = "hello|world";
+    let regex = Regex::new(pattern, CompileFlags::EXTENDED)?;
+
+    // Match against text
+    let text = "hello there";
+    let matches = regex.exec(text, ExecFlags::empty())?;
+
+    // Extract matched substring
+    let matched = &text[matches[0].start as usize..matches[0].end as usize];
+    println!("Matched: {}", matched);
+
+    Ok(())
+}
+```
+
+The Rust API provides:
+- Type-safe regex compilation and execution
+- Error handling via `Result` types
+- Zero-cost abstractions with no performance penalty
+- Full documentation with examples
 
 ## Test Suite
 
@@ -307,10 +343,10 @@ gcc -o prog prog.c -L./target/release -lminrx -Wl,-rpath,./target/release
 
 Potential future enhancements to the conversions:
 
-- **Rust**: Stabilize and document the native Rust API
 - **Rust**: Add async support for non-blocking matching
 - **Rust**: Publish to crates.io as a library
 - **All**: Continued performance optimization
+- **All**: Extended benchmarking suite comparing C, C++, and Rust implementations
 
 ## Credits
 
