@@ -239,13 +239,13 @@ impl<'a> Compiler<'a> {
         if self.current == Some('}') {
             // {m} - exact count
             self.next_char();
-            Ok(self.mkrep_count(lh, m, m, nstk))
+            Ok(self.mkrep_count(lh, Some(m), Some(m), nstk))
         } else if self.current == Some(',') {
             self.next_char();
             if self.current == Some('}') {
                 // {m,} - minimum m, unbounded
                 self.next_char();
-                Ok(self.mkrep_count(lh, m, usize::MAX, nstk))
+                Ok(self.mkrep_count(lh, Some(m), None, nstk))
             } else {
                 // {m,n} - range
                 let n = match self.parse_number() {
@@ -266,7 +266,7 @@ impl<'a> Compiler<'a> {
                     ));
                 }
                 self.next_char();
-                Ok(self.mkrep_count(lh, m, n, nstk))
+                Ok(self.mkrep_count(lh, Some(m), Some(n), nstk))
             }
         } else {
             // If we hit EOF, it's an unbalanced brace, otherwise invalid contents
@@ -338,29 +338,45 @@ impl<'a> Compiler<'a> {
         }
     }
 
-    // Create repetition for {m,n}
-    fn mkrep_count(&self, lh: Subexp, m: usize, n: usize, nstk: usize) -> Subexp {
+    // Create repetition for {m,n} where None represents unbounded
+    fn mkrep_count(&self, lh: Subexp, m_opt: Option<usize>, n_opt: Option<usize>, nstk: usize) -> Subexp {
         // Validate bounds
-        if (m != usize::MAX && m > RE_DUP_MAX) || (n != usize::MAX && n > RE_DUP_MAX) || m > n {
-            return (VecDeque::new(), 0, false, RegexError::BadBr);
+        if let Some(m) = m_opt {
+            if m > RE_DUP_MAX {
+                return (VecDeque::new(), 0, false, RegexError::BadBr);
+            }
+        }
+        if let Some(n) = n_opt {
+            if n > RE_DUP_MAX {
+                return (VecDeque::new(), 0, false, RegexError::BadBr);
+            }
+        }
+        // Check m <= n when both are Some
+        if let (Some(m), Some(n)) = (m_opt, n_opt) {
+            if m > n {
+                return (VecDeque::new(), 0, false, RegexError::BadBr);
+            }
         }
 
-        if n == 0 {
+        let m = m_opt.unwrap_or(0);
+        let n_bounded = n_opt;
+
+        if let Some(0) = n_bounded {
             // {0,0} matches empty string
             return (VecDeque::new(), 0, false, RegexError::Success);
         }
 
         // Handle simple cases
-        if m == 0 && n == 1 {
+        if m == 0 && n_bounded == Some(1) {
             return self.mkrep(lh, true, false, nstk); // equivalent to ?
         }
-        if m == 0 && n == usize::MAX {
+        if m == 0 && n_bounded.is_none() {
             return self.mkrep(lh, true, true, nstk); // equivalent to *
         }
-        if m == 1 && n == 1 {
+        if m == 1 && n_bounded == Some(1) {
             return lh; // {1,1} is just the pattern itself
         }
-        if m == 1 && n == usize::MAX {
+        if m == 1 && n_bounded.is_none() {
             return self.mkrep(lh, false, true, nstk); // equivalent to +
         }
 
@@ -376,7 +392,7 @@ impl<'a> Compiler<'a> {
         }
 
         // Add optional repetitions for n-m times or infinite loop
-        if n != usize::MAX {
+        if let Some(n) = n_bounded {
             // Finite upper bound: add (n-m) optional copies
             let mut rhs = rhs_orig.clone();
             maxstk = maxstk.max(rhmaxstk + 2);

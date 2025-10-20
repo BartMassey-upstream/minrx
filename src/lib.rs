@@ -15,8 +15,9 @@
 //! let text = "hello there";
 //! let matches = regex.exec(text, ExecFlags::empty()).unwrap();
 //!
-//! assert_eq!(matches[0].start, 0);
-//! assert_eq!(matches[0].end, 5);
+//! let m = matches[0].as_ref().unwrap();
+//! assert_eq!(m.start, 0);
+//! assert_eq!(m.end, 5);
 //! ```
 //!
 //! # Pattern Syntax
@@ -66,8 +67,9 @@
 //!
 //! let regex = Regex::new("a+b*", CompileFlags::EXTENDED).unwrap();
 //! let matches = regex.exec("aaabbb", ExecFlags::empty()).unwrap();
-//! assert_eq!(matches[0].start, 0);
-//! assert_eq!(matches[0].end, 6);
+//! let m = matches[0].as_ref().unwrap();
+//! assert_eq!(m.start, 0);
+//! assert_eq!(m.end, 6);
 //! ```
 //!
 //! ## Capture Groups
@@ -79,16 +81,16 @@
 //! let matches = regex.exec("user@example", ExecFlags::empty()).unwrap();
 //!
 //! // matches[0] is the full match
-//! assert_eq!(matches[0].start, 0);
-//! assert_eq!(matches[0].end, 12);
+//! assert_eq!(matches[0].as_ref().unwrap().start, 0);
+//! assert_eq!(matches[0].as_ref().unwrap().end, 12);
 //!
 //! // matches[1] is first capture group
-//! assert_eq!(matches[1].start, 0);
-//! assert_eq!(matches[1].end, 4);
+//! assert_eq!(matches[1].as_ref().unwrap().start, 0);
+//! assert_eq!(matches[1].as_ref().unwrap().end, 4);
 //!
 //! // matches[2] is second capture group
-//! assert_eq!(matches[2].start, 5);
-//! assert_eq!(matches[2].end, 12);
+//! assert_eq!(matches[2].as_ref().unwrap().start, 5);
+//! assert_eq!(matches[2].as_ref().unwrap().end, 12);
 //! ```
 //!
 //! ## Case-Insensitive Matching
@@ -265,29 +267,14 @@ bitflags::bitflags! {
     }
 }
 
-/// A match result containing start and end positions
+/// A match result representing a byte range in the input text
 ///
-/// The positions are byte offsets into the input text.
-/// A value of -1 indicates an invalid/unmatched position.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct RegMatch {
-    /// Starting byte offset of the match
-    pub start: isize,
-    /// Ending byte offset of the match (one past the last matched byte)
-    pub end: isize,
-}
-
-impl RegMatch {
-    /// Creates a new match result with the given start and end positions
-    pub fn new(start: isize, end: isize) -> Self {
-        Self { start, end }
-    }
-
-    /// Creates an invalid match result (both positions set to -1)
-    pub fn invalid() -> Self {
-        Self { start: -1, end: -1 }
-    }
-}
+/// This is a standard Rust [`Range<usize>`](std::ops::Range) where `start` is the
+/// beginning offset and `end` is one past the last matched byte.
+///
+/// Capture groups that didn't participate in a match are represented as `None`
+/// in the results vector returned by [`Regex::exec`].
+pub type RegMatch = std::ops::Range<usize>;
 
 /// A compiled regular expression
 ///
@@ -298,8 +285,9 @@ impl RegMatch {
 ///
 /// let regex = Regex::new("hello", CompileFlags::EXTENDED).unwrap();
 /// let matches = regex.exec("hello world", ExecFlags::empty()).unwrap();
-/// assert_eq!(matches[0].start, 0);
-/// assert_eq!(matches[0].end, 5);
+/// let m = matches[0].as_ref().unwrap();
+/// assert_eq!(m.start, 0);
+/// assert_eq!(m.end, 5);
 /// ```
 pub struct Regex {
     pub(crate) csets: Vec<CSet>,
@@ -341,9 +329,10 @@ impl Regex {
     ///
     /// # Returns
     ///
-    /// Returns `Ok(Vec<RegMatch>)` with match positions on success.
-    /// The first element (index 0) is the overall match, and subsequent
-    /// elements are captured subexpressions.
+    /// Returns `Ok(Vec<Option<RegMatch>>)` with match positions on success.
+    /// The first element (index 0) is always `Some` containing the overall match.
+    /// Subsequent elements are captured subexpressions, which may be `None` if
+    /// that group didn't participate in the match.
     ///
     /// Returns `Err(RegexError::NoMatch)` if no match is found.
     ///
@@ -354,10 +343,11 @@ impl Regex {
     ///
     /// let regex = Regex::new("(\\w+)", CompileFlags::EXTENDED | CompileFlags::EXTENSIONS_GNU).unwrap();
     /// let matches = regex.exec("hello world", ExecFlags::empty()).unwrap();
-    /// assert_eq!(matches[0].start, 0);
-    /// assert_eq!(matches[0].end, 5);
+    /// let m = matches[0].as_ref().unwrap();
+    /// assert_eq!(m.start, 0);
+    /// assert_eq!(m.end, 5);
     /// ```
-    pub fn exec(&self, text: &str, flags: ExecFlags) -> Result<Vec<RegMatch>, RegexError> {
+    pub fn exec(&self, text: &str, flags: ExecFlags) -> Result<Vec<Option<RegMatch>>, RegexError> {
         execute::execute(self, text, flags)
     }
 

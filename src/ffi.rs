@@ -101,8 +101,16 @@ pub unsafe extern "C" fn minrx_regexec(
             if !pmatch.is_null() {
                 for (i, m) in matches.iter().enumerate().take(nmatch) {
                     unsafe {
-                        (*pmatch.add(i)).rm_so = m.start;
-                        (*pmatch.add(i)).rm_eo = m.end;
+                        match m {
+                            Some(range) => {
+                                (*pmatch.add(i)).rm_so = range.start as libc::ptrdiff_t;
+                                (*pmatch.add(i)).rm_eo = range.end as libc::ptrdiff_t;
+                            }
+                            None => {
+                                (*pmatch.add(i)).rm_so = -1;
+                                (*pmatch.add(i)).rm_eo = -1;
+                            }
+                        }
                     }
                 }
             }
@@ -263,8 +271,16 @@ pub unsafe extern "C" fn minrx_regnexec(
             if !pmatch.is_null() {
                 for (i, m) in matches.iter().enumerate().take(nmatch) {
                     unsafe {
-                        (*pmatch.add(i)).rm_so = m.start;
-                        (*pmatch.add(i)).rm_eo = m.end;
+                        match m {
+                            Some(range) => {
+                                (*pmatch.add(i)).rm_so = range.start as libc::ptrdiff_t;
+                                (*pmatch.add(i)).rm_eo = range.end as libc::ptrdiff_t;
+                            }
+                            None => {
+                                (*pmatch.add(i)).rm_so = -1;
+                                (*pmatch.add(i)).rm_eo = -1;
+                            }
+                        }
                     }
                 }
             }

@@ -11,7 +11,7 @@ use std::str::Chars;
 struct NState {
     gen: usize,
     boff: usize,
-    substack: COWVec<usize>,
+    substack: COWVec<Option<usize>>,
 }
 
 impl NState {
@@ -19,7 +19,7 @@ impl NState {
         Self {
             gen: 0,
             boff: 0,
-            substack: COWVec::new(allocator_size, usize::MAX),
+            substack: COWVec::new(allocator_size),
         }
     }
 
@@ -40,7 +40,7 @@ pub struct Executor<'a> {
     off: usize,
     chars: Peekable<Chars<'a>>,
     prev_char: Option<char>,
-    best: Option<COWVec<usize>>,
+    best: Option<COWVec<Option<usize>>>,
     epsq: QSet,
     epsv: QVec<NState>,
 }
@@ -67,7 +67,7 @@ impl<'a> Executor<'a> {
         c.is_alphanumeric() || c == '_'
     }
 
-    pub fn execute(&mut self) -> Result<Vec<RegMatch>, RegexError> {
+    pub fn execute(&mut self) -> Result<Vec<Option<RegMatch>>, RegexError> {
         let mut mcsvs = [
             QVec::new(self.regex.nodes.len()),
             QVec::new(self.regex.nodes.len()),
@@ -122,9 +122,13 @@ impl<'a> Executor<'a> {
         if let Some(ref best) = self.best {
             let mut matches = Vec::with_capacity(self.regex.nsub);
             for i in 0..self.regex.nsub {
-                let start = best.get(self.suboff + i * 2) as isize;
-                let end = best.get(self.suboff + i * 2 + 1) as isize;
-                matches.push(RegMatch::new(start, end));
+                let start = best.get(self.suboff + i * 2);
+                let end = best.get(self.suboff + i * 2 + 1);
+                let regmatch = match (start, end) {
+                    (Some(s), Some(e)) => Some(s..e),
+                    _ => None,
+                };
+                matches.push(regmatch);
             }
             Ok(matches)
         } else {
@@ -310,15 +314,18 @@ impl<'a> Executor<'a> {
                         let best_b = best.get(self.suboff);
                         let best_e = best.get(self.suboff + 1);
                         // Accept new match if: earlier start (leftmost) OR same start but longer (greedy)
-                        b < best_b || (b == best_b && e > best_e)
+                        match (best_b, best_e) {
+                            (Some(bb), Some(be)) => b < bb || (b == bb && e > be),
+                            _ => true, // No valid previous match
+                        }
                     } else {
                         true // No previous match
                     };
 
                     if should_update {
                         let mut new_best = ns_clone.substack.clone();
-                        new_best.put(self.suboff, b);
-                        new_best.put(self.suboff + 1, e);
+                        new_best.put(self.suboff, Some(b));
+                        new_best.put(self.suboff + 1, Some(e));
                         self.best = Some(new_best);
                     }
                 }
@@ -351,24 +358,22 @@ impl<'a> Executor<'a> {
                 }
                 NodeType::SubL => {
                     let mut nscopy = ns_clone.clone_state();
-                    nscopy.substack.put(nstk - 1, self.off);
+                    nscopy.substack.put(nstk - 1, Some(self.off));
 
                     // Reset subsequent submatches if NOSUBRESET is not set
-                    if node.args[0] != usize::MAX && !self.flags.contains(ExecFlags::NOSUBRESET) {
+                    if !self.flags.contains(ExecFlags::NOSUBRESET) {
                         for i in (node.args[0] + 1)..=node.args[1] {
-                            nscopy.substack.put(self.suboff + i * 2, usize::MAX);
-                            nscopy.substack.put(self.suboff + i * 2 + 1, usize::MAX);
+                            nscopy.substack.put(self.suboff + i * 2, None);
+                            nscopy.substack.put(self.suboff + i * 2 + 1, None);
                         }
                     }
 
                     self.add(ncsv, k + 1, nstk, &nscopy, next_char);
                 }
                 NodeType::SubR => {
-                    // Only save submatch if args[0] is valid and either FIRSTSUB is not set
-                    // or the submatch hasn't been captured yet
-                    if node.args[0] != usize::MAX
-                        && (!self.flags.contains(ExecFlags::FIRSTSUB)
-                            || ns_clone.substack.get(self.suboff + node.args[0] * 2) == usize::MAX)
+                    // Only save submatch if FIRSTSUB is not set or the submatch hasn't been captured yet
+                    if !self.flags.contains(ExecFlags::FIRSTSUB)
+                        || ns_clone.substack.get(self.suboff + node.args[0] * 2).is_none()
                     {
                         let mut nscopy = ns_clone.clone_state();
                         nscopy
@@ -376,7 +381,7 @@ impl<'a> Executor<'a> {
                             .put(self.suboff + node.args[0] * 2, ns_clone.substack.get(nstk));
                         nscopy
                             .substack
-                            .put(self.suboff + node.args[0] * 2 + 1, self.off);
+                            .put(self.suboff + node.args[0] * 2 + 1, Some(self.off));
                         self.add(ncsv, k + 1, nstk, &nscopy, next_char);
                     } else {
                         // Still need to continue execution even if we don't save the submatch
@@ -423,9 +428,9 @@ impl<'a> Executor<'a> {
                         );
                     }
                     let mut nscopy1 = ns_clone.clone_state();
-                    nscopy1.substack.put(nstk - 3, self.off);
-                    nscopy1.substack.put(nstk - 2, usize::MAX); // -1
-                    nscopy1.substack.put(nstk - 1, self.off);
+                    nscopy1.substack.put(nstk - 3, Some(self.off));
+                    nscopy1.substack.put(nstk - 2, None); // Sentinel for "not set"
+                    nscopy1.substack.put(nstk - 1, Some(self.off));
                     self.add(ncsv, k + 1, nstk, &nscopy1, next_char);
 
                     // If args[1] is 1 (optional), also add branch that skips the loop
@@ -438,9 +443,9 @@ impl<'a> Executor<'a> {
                             );
                         }
                         let mut nscopy2 = ns_clone.clone_state();
-                        nscopy2.substack.put(nstk - 3, self.off);
-                        nscopy2.substack.put(nstk - 2, 0); // Start with 0 for skip branch
-                        nscopy2.substack.put(nstk - 1, self.off);
+                        nscopy2.substack.put(nstk - 3, Some(self.off));
+                        nscopy2.substack.put(nstk - 2, Some(0)); // Start with 0 for skip branch
+                        nscopy2.substack.put(nstk - 1, Some(self.off));
                         self.add(ncsv, k + 1 + node.args[0], nstk, &nscopy2, next_char);
                     }
                 }
@@ -460,27 +465,29 @@ impl<'a> Executor<'a> {
                     if node.args[1] == 1 {
                         let loop_start_off = ns_clone.substack.get(nstk + 2);
                         if debug {
-                            eprintln!("[Next] k={} infinite loop, checking progress: off={} vs loop_start={}",
+                            eprintln!("[Next] k={} infinite loop, checking progress: off={} vs loop_start={:?}",
                                      k, self.off, loop_start_off);
                         }
-                        if self.off > loop_start_off {
-                            if debug {
-                                eprintln!(
-                                    "[Next] k={} made progress, looping back to k={}",
-                                    k,
-                                    k - node.args[0]
-                                );
+                        if let Some(start_off) = loop_start_off {
+                            if self.off > start_off {
+                                if debug {
+                                    eprintln!(
+                                        "[Next] k={} made progress, looping back to k={}",
+                                        k,
+                                        k - node.args[0]
+                                    );
+                                }
+                                let mut nscopy2 = ns_clone.clone_state();
+                                // Copy the three values and update the last one
+                                let val0 = ns_clone.substack.get(nstk);
+                                let val1 = ns_clone.substack.get(nstk + 1);
+                                nscopy2.substack.put(nstk, val0);
+                                nscopy2.substack.put(nstk + 1, val1.map(|v| v.wrapping_sub(1)));
+                                nscopy2.substack.put(nstk + 2, Some(self.off));
+                                self.add(ncsv, k - node.args[0], nstk + 3, &nscopy2, next_char);
+                            } else if debug {
+                                eprintln!("[Next] k={} no progress, not looping back", k);
                             }
-                            let mut nscopy2 = ns_clone.clone_state();
-                            // Copy the three values and update the last one
-                            let val0 = ns_clone.substack.get(nstk);
-                            let val1 = ns_clone.substack.get(nstk + 1);
-                            nscopy2.substack.put(nstk, val0);
-                            nscopy2.substack.put(nstk + 1, val1.wrapping_sub(1));
-                            nscopy2.substack.put(nstk + 2, self.off);
-                            self.add(ncsv, k - node.args[0], nstk + 3, &nscopy2, next_char);
-                        } else if debug {
-                            eprintln!("[Next] k={} no progress, not looping back", k);
                         }
                     }
                 }
@@ -557,7 +564,7 @@ impl<'a> Executor<'a> {
     }
 }
 
-pub fn execute(regex: &Regex, text: &str, flags: ExecFlags) -> Result<Vec<RegMatch>, RegexError> {
+pub fn execute(regex: &Regex, text: &str, flags: ExecFlags) -> Result<Vec<Option<RegMatch>>, RegexError> {
     let mut executor = Executor::new(regex, text, flags);
     executor.execute()
 }
