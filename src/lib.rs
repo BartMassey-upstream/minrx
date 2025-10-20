@@ -189,6 +189,14 @@ impl RegexError {
     }
 }
 
+impl std::fmt::Display for RegexError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.message())
+    }
+}
+
+impl std::error::Error for RegexError {}
+
 bitflags::bitflags! {
     /// Flags for regex compilation
     ///
