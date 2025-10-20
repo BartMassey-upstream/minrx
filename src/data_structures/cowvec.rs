@@ -2,7 +2,6 @@
 //!
 //! Provides efficient cloning with deferred copying until modification.
 
-use std::cmp::Ordering;
 use std::rc::Rc;
 
 /// Copy-on-Write Vector
@@ -33,23 +32,7 @@ impl<T: Clone> COWVec<T> {
         Rc::make_mut(&mut self.storage)[idx] = val;
     }
 
-    pub fn cmp_range(&self, other: &Self, offset: usize, count: usize) -> Ordering
-    where
-        T: PartialOrd,
-    {
-        for i in 0..count {
-            match self.storage[offset + i].partial_cmp(&other.storage[offset + i]) {
-                Some(Ordering::Equal) => continue,
-                Some(ord) => return ord,
-                None => return Ordering::Equal,
-            }
-        }
-        Ordering::Equal
-    }
 
-    pub fn as_slice(&self) -> Vec<T> {
-        (*self.storage).clone()
-    }
 }
 
 #[cfg(test)]

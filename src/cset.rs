@@ -124,11 +124,6 @@ impl CSet {
         self.ranges = new_ranges;
     }
 
-    pub fn union(&mut self, other: &CSet) {
-        for range in &other.ranges {
-            self.set_range(range.min, range.max);
-        }
-    }
 
     pub fn add_char_class(&mut self, name: &str, flags: CompileFlags) -> bool {
         match name {
@@ -375,49 +370,7 @@ impl CSet {
         Ok(())
     }
 
-    pub fn first_bytes(&self) -> (Vec<bool>, Option<u8>) {
-        let mut bytes = vec![false; 256];
-        let mut count = 0;
-        let mut unique = None;
 
-        for range in &self.ranges {
-            // For UTF-8, get the first byte of each character
-            let lo = self.utf8_first_byte(range.min);
-            let hi = self.utf8_first_byte(range.max);
-
-            for (b, byte) in bytes
-                .iter_mut()
-                .enumerate()
-                .skip(lo)
-                .take(hi.min(255) - lo + 1)
-            {
-                if !*byte {
-                    *byte = true;
-                    count += 1;
-                    unique = Some(b as u8);
-                }
-            }
-        }
-
-        if count == 1 {
-            (bytes, unique)
-        } else {
-            (bytes, None)
-        }
-    }
-
-    fn utf8_first_byte(&self, c: char) -> usize {
-        let code = c as u32;
-        if code < 0x80 {
-            code as usize
-        } else if code < 0x800 {
-            0xC0 + ((code >> 6) as usize)
-        } else if code < 0x10000 {
-            0xE0 + ((code >> 12) as usize)
-        } else {
-            0xF0 + ((code >> 18) as usize)
-        }
-    }
 }
 
 #[cfg(test)]

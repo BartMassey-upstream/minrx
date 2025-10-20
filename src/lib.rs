@@ -130,10 +130,6 @@
 //! OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 //! SUCH DAMAGE.
 
-// Allow dead code for internal types and methods that are part of the implementation
-// but may not be used in all code paths (e.g., some data structure methods, node variants)
-#![allow(dead_code)]
-
 use std::collections::HashMap;
 
 mod compile;
@@ -261,12 +257,8 @@ impl RegMatch {
 /// assert_eq!(matches[0].end, 5);
 /// ```
 pub struct Regex {
-    pub(crate) err: RegexError,
     pub(crate) csets: Vec<CSet>,
     pub(crate) nodes: Vec<Node>,
-    pub(crate) firstcset: Option<CSet>,
-    pub(crate) firstbytes: Option<Vec<bool>>,
-    pub(crate) firstunique: Option<u8>,
     pub(crate) nmin: usize,
     pub(crate) nstk: usize,
     pub(crate) nsub: usize,

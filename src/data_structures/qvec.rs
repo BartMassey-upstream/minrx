@@ -24,9 +24,6 @@ impl<T> QVec<T> {
         self.qset.is_empty()
     }
 
-    pub fn contains(&self, k: usize) -> bool {
-        self.qset.contains(k)
-    }
 
     /// Insert an element, returning (was_new, mutable_reference)
     /// If was_new is true, the caller must initialize the reference
@@ -39,9 +36,11 @@ impl<T> QVec<T> {
         self.storage[k].as_ref()
     }
 
-    pub fn lookup_mut(&mut self, k: usize) -> Option<&mut T> {
-        self.storage[k].as_mut()
+    #[cfg(test)]
+    pub fn contains(&self, k: usize) -> bool {
+        self.qset.contains(k)
     }
+
 
     pub fn remove(&mut self) -> (usize, T) {
         let k = self.qset.remove();
@@ -49,11 +48,6 @@ impl<T> QVec<T> {
         (k, data)
     }
 
-    pub fn clear(&mut self) {
-        while !self.is_empty() {
-            self.remove();
-        }
-    }
 }
 
 #[cfg(test)]

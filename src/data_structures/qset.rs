@@ -43,23 +43,23 @@ impl QSet {
         self.bits[0][0] == 0
     }
 
+    #[cfg(test)]
     pub fn contains(&self, k: usize) -> bool {
         let mut i = 0;
         let mut s = 6 * self.depth;
         let mut j = 0;
 
         while i < self.depth {
-            let x = self.bits[i][j];
             s -= 6;
-            j = k >> s;
-            let w = Self::bit(j);
-            if (x & w) == 0 {
+            j = (j << 6) | ((k >> s) & 0x3f);
+            if (self.bits[i][j >> 6] & (1 << (j & 0x3f))) == 0 {
                 return false;
             }
             i += 1;
         }
         true
     }
+
 
     pub fn insert(&mut self, k: usize) -> bool {
         let mut newly_inserted = false;

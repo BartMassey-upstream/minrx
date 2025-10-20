@@ -78,21 +78,10 @@ impl<'a> Compiler<'a> {
         }
 
         let nodes: Vec<Node> = nodes_deque.into_iter().collect();
-        let firstcset = self.first_closure(&nodes);
-        let (firstbytes, firstunique) = if let Some(ref cs) = firstcset {
-            let (bytes, unique) = cs.first_bytes();
-            (Some(bytes), unique)
-        } else {
-            (None, None)
-        };
 
         Ok(Regex {
-            err: RegexError::Success,
             csets: self.csets,
             nodes,
-            firstcset,
-            firstbytes,
-            firstunique,
             nmin: self.nmin,
             nstk,
             nsub: self.nsub + 1,
@@ -640,29 +629,6 @@ impl<'a> Compiler<'a> {
         }
     }
 
-    fn first_closure(&self, nodes: &[Node]) -> Option<CSet> {
-        if nodes.is_empty() {
-            return None;
-        }
-
-        let mut cset = CSet::new();
-        // Simplified: just look at first node
-        if let Some(first) = nodes.first() {
-            match first.node_type {
-                NodeType::Char(c) => {
-                    cset.set_char(c);
-                    return Some(cset);
-                }
-                NodeType::CSet => {
-                    if let Some(cs) = self.csets.get(first.args[0]) {
-                        return Some(cs.clone());
-                    }
-                }
-                _ => {}
-            }
-        }
-        None
-    }
 }
 
 pub fn compile(pattern: &str, flags: CompileFlags) -> Result<Regex, RegexError> {
