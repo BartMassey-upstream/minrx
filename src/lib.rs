@@ -150,24 +150,40 @@ const RE_DUP_MAX: usize = 32767;
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(i32)]
 pub enum RegexError {
+    /// Operation completed successfully (not an error)
     Success = 0,
+    /// Invalid regular expression pattern
     BadPat = 1,
+    /// Invalid contents of `{}`
     BadBr = 2,
+    /// `?`, `*`, `+`, or `{interval}` not preceded by valid subpattern
     BadRpt = 3,
+    /// Unbalanced `{`
     EBrace = 4,
+    /// Unbalanced `[`
     EBrack = 5,
+    /// Invalid collating element
     ECollate = 6,
+    /// Invalid character class name
     ECType = 7,
+    /// Trailing backslash `\`
     EEscape = 8,
+    /// Unbalanced `(`
     EParen = 9,
+    /// Invalid range endpoint in bracket expression
     ERange = 10,
+    /// Out of memory
     ESpace = 11,
+    /// Invalid backreference number
     ESubreg = 12,
+    /// No match found
     NoMatch = 13,
+    /// Unknown error code
     Unknown = 14,
 }
 
 impl RegexError {
+    /// Returns a human-readable error message for this error code
     pub fn message(&self) -> &'static str {
         match self {
             RegexError::Success => "success",
@@ -203,16 +219,27 @@ bitflags::bitflags! {
     /// These flags control how the pattern is interpreted during compilation.
     #[derive(Clone, Copy, Debug, PartialEq, Eq)]
     pub struct CompileFlags: u32 {
+        /// Use POSIX Extended Regular Expression syntax
         const EXTENDED = 1;
+        /// Case-insensitive matching
         const ICASE = 2;
+        /// Minimal (non-greedy) matching (not yet implemented)
         const MINIMAL = 4;
+        /// Treat newline specially: `.` doesn't match `\n`, `^` matches after `\n`, `$` matches before `\n`
         const NEWLINE = 8;
+        /// Don't track subexpressions (not yet implemented)
         const NOSUB = 16;
+        /// Enable brace compatibility mode
         const BRACE_COMPAT = 32;
+        /// Allow backslash escapes in bracket expressions
         const BRACK_ESCAPE = 64;
+        /// Enable BSD extensions (`\<`, `\>`)
         const EXTENSIONS_BSD = 128;
+        /// Enable GNU extensions (`\b`, `\B`, `\w`, `\W`, `\s`, `\S`, `` \` ``, `\'`)
         const EXTENSIONS_GNU = 256;
+        /// Internal: native 1-byte encoding
         const NATIVE1B = 512;
+        /// Internal: disable minimal matching
         const MINDISABLE = 1024;
     }
 }
@@ -223,11 +250,17 @@ bitflags::bitflags! {
     /// These flags control how the match is performed.
     #[derive(Clone, Copy, Debug, PartialEq, Eq)]
     pub struct ExecFlags: u32 {
+        /// First character is not at beginning of line (don't match `^`)
         const NOTBOL = 1;
+        /// Last character is not at end of line (don't match `$`)
         const NOTEOL = 2;
+        /// Only capture first submatch for each group
         const FIRSTSUB = 4;
+        /// Don't reset later submatches when entering new group
         const NOSUBRESET = 8;
+        /// Resume matching from previous position (not yet implemented)
         const RESUME = 16;
+        /// Internal: disable first-byte optimization
         const NOFIRSTBYTES = 32;
     }
 }
@@ -238,15 +271,19 @@ bitflags::bitflags! {
 /// A value of -1 indicates an invalid/unmatched position.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct RegMatch {
+    /// Starting byte offset of the match
     pub start: isize,
+    /// Ending byte offset of the match (one past the last matched byte)
     pub end: isize,
 }
 
 impl RegMatch {
+    /// Creates a new match result with the given start and end positions
     pub fn new(start: isize, end: isize) -> Self {
         Self { start, end }
     }
 
+    /// Creates an invalid match result (both positions set to -1)
     pub fn invalid() -> Self {
         Self { start: -1, end: -1 }
     }
@@ -273,14 +310,60 @@ pub struct Regex {
 }
 
 impl Regex {
+    /// Compiles a regular expression pattern
+    ///
+    /// # Arguments
+    ///
+    /// * `pattern` - The regular expression pattern string
+    /// * `flags` - Compilation flags controlling pattern interpretation
+    ///
+    /// # Returns
+    ///
+    /// Returns `Ok(Regex)` on success, or `Err(RegexError)` if the pattern is invalid.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use minrx::{Regex, CompileFlags};
+    ///
+    /// let regex = Regex::new("a+b*", CompileFlags::EXTENDED).unwrap();
+    /// ```
     pub fn new(pattern: &str, flags: CompileFlags) -> Result<Self, RegexError> {
         compile::compile(pattern, flags)
     }
 
+    /// Executes the regex against input text
+    ///
+    /// # Arguments
+    ///
+    /// * `text` - The text to search
+    /// * `flags` - Execution flags controlling match behavior
+    ///
+    /// # Returns
+    ///
+    /// Returns `Ok(Vec<RegMatch>)` with match positions on success.
+    /// The first element (index 0) is the overall match, and subsequent
+    /// elements are captured subexpressions.
+    ///
+    /// Returns `Err(RegexError::NoMatch)` if no match is found.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use minrx::{Regex, CompileFlags, ExecFlags};
+    ///
+    /// let regex = Regex::new("(\\w+)", CompileFlags::EXTENDED | CompileFlags::EXTENSIONS_GNU).unwrap();
+    /// let matches = regex.exec("hello world", ExecFlags::empty()).unwrap();
+    /// assert_eq!(matches[0].start, 0);
+    /// assert_eq!(matches[0].end, 5);
+    /// ```
     pub fn exec(&self, text: &str, flags: ExecFlags) -> Result<Vec<RegMatch>, RegexError> {
         execute::execute(self, text, flags)
     }
 
+    /// Returns the number of capturing groups in the pattern
+    ///
+    /// This count does not include the overall match (group 0).
     pub fn nsub(&self) -> usize {
         if self.nsub > 0 {
             self.nsub - 1
