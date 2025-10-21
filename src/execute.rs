@@ -174,7 +174,8 @@ impl<'a> Executor<'a> {
                         if let Some(ref existing) = *slot {
                             let existing_gen = existing.generation;
                             if self.generation > existing.generation
-                                || (self.generation == existing.generation && ns.boff < existing.boff)
+                                || (self.generation == existing.generation
+                                    && ns.boff < existing.boff)
                             {
                                 let mut new_state = ns.clone_state();
                                 new_state.generation = self.generation;
@@ -217,13 +218,17 @@ impl<'a> Executor<'a> {
                                 if let Some(ref existing) = *slot {
                                     let existing_gen = existing.generation;
                                     if self.generation > existing.generation
-                                        || (self.generation == existing.generation && ns.boff < existing.boff)
+                                        || (self.generation == existing.generation
+                                            && ns.boff < existing.boff)
                                     {
                                         let mut new_state = ns.clone_state();
                                         new_state.generation = self.generation;
                                         *slot = Some(new_state);
                                         if debug {
-                                            eprintln!("  -> CSet matched '{:?}', updated in ncsv (generation {} > {})", nc, self.generation, existing_gen);
+                                            eprintln!(
+                                                "  -> CSet matched '{:?}', updated in ncsv (generation {} > {})",
+                                                nc, self.generation, existing_gen
+                                            );
                                         }
                                     } else if debug {
                                         eprintln!(
@@ -468,8 +473,10 @@ impl<'a> Executor<'a> {
                     if node.args[1] == 1 {
                         let loop_start_off = ns_clone.substack.get(nstk + 2);
                         if debug {
-                            eprintln!("[Next] k={} infinite loop, checking progress: off={} vs loop_start={:?}",
-                                     k, self.off, loop_start_off);
+                            eprintln!(
+                                "[Next] k={} infinite loop, checking progress: off={} vs loop_start={:?}",
+                                k, self.off, loop_start_off
+                            );
                         }
                         if let Some(start_off) = loop_start_off {
                             if self.off > start_off {

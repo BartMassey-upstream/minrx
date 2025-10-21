@@ -299,11 +299,7 @@ impl<'a> Compiler<'a> {
             }
         }
 
-        if has_digits {
-            Some(num)
-        } else {
-            None
-        }
+        if has_digits { Some(num) } else { None }
     }
 
     // Create repetition for *, +, ?

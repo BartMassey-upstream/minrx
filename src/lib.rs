@@ -357,11 +357,7 @@ impl Regex {
     ///
     /// This count does not include the overall match (group 0).
     pub const fn nsub(&self) -> usize {
-        if self.nsub > 0 {
-            self.nsub - 1
-        } else {
-            0
-        }
+        if self.nsub > 0 { self.nsub - 1 } else { 0 }
     }
 }
 
