@@ -2,9 +2,25 @@
 name = "minrx"
 version = "0.1.0"
 edition = "2021"
+rust-version = "1.63"
 authors = ["Michael J. Haertel", "Rust conversion by Claude"]
 license = "BSD-2-Clause"
 description = "A minimal matcher for POSIX Extended Regular Expressions"
+repository = "https://github.com/BartMassey-upstream/minrx"
+homepage = "https://github.com/BartMassey-upstream/minrx"
+documentation = "https://docs.rs/minrx"
+readme = "README.md"
+keywords = ["regex", "posix", "ere", "pattern", "matching"]
+categories = ["text-processing", "parsing"]
+exclude = [
+    "*.cpp",
+    "*.h",
+    "*.c",
+    "Makefile",
+    "meson.build",
+    "subprojects/",
+    ".vscode/",
+]
 
 [dependencies]
 libc = "0.2"
@@ -17,6 +33,9 @@ crate-type = ["lib", "cdylib", "staticlib"]
 [[test]]
 name = "integration"
 path = "tests/integration.rs"
+
+[badges.maintenance]
+status = "actively-developed"
 
 [profile.release]
 opt-level = 3

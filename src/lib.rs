@@ -1,3 +1,5 @@
+#![doc(html_root_url = "https://docs.rs/minrx/0.1.0")]
+
 //! MinRX: A minimal matcher for POSIX Extended Regular Expressions
 //!
 //! MinRX provides a fast, memory-safe implementation of POSIX Extended Regular

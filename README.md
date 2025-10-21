@@ -64,6 +64,63 @@ unlikely to be broadly useful.
 
 A detailed description of MinRX's algorithm can be found in [ALGORITHM.txt](ALGORITHM.txt).
 
+## Using MinRX from Rust
+
+Add MinRX to your `Cargo.toml`:
+
+```toml
+[dependencies]
+minrx = "0.1.0"
+```
+
+### Basic Usage
+
+```rust
+use minrx::{Regex, CompileFlags, ExecFlags};
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let regex = Regex::new("hello|world", CompileFlags::EXTENDED)?;
+    let matches = regex.exec("hello there", ExecFlags::empty())?;
+
+    if let Some(m) = matches[0].as_ref() {
+        println!("Match found at {}..{}", m.start, m.end);
+    }
+
+    Ok(())
+}
+```
+
+### Capture Groups
+
+```rust
+use minrx::{Regex, CompileFlags, ExecFlags};
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let regex = Regex::new("([a-z]+)@([a-z]+)", CompileFlags::EXTENDED)?;
+    let matches = regex.exec("user@example.com", ExecFlags::empty())?;
+
+    // matches[0] is the overall match
+    // matches[1] is the first capture group
+    // matches[2] is the second capture group
+
+    for (i, m) in matches.iter().enumerate() {
+        if let Some(range) = m {
+            println!("Group {}: {}..{}", i, range.start, range.end);
+        }
+    }
+
+    Ok(())
+}
+```
+
+### API Documentation
+
+For complete API documentation, visit [docs.rs/minrx](https://docs.rs/minrx).
+
+## Using MinRX from C/C++
+
+The sections below describe the C/C++ API and build process. For Rust usage, see the section above.
+
 ## Features
 
 MinRX is a nearly-feature-complete implementation of POSIX 2024 EREs,

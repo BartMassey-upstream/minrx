@@ -17,7 +17,7 @@ impl QSet {
         let mut current = limit;
 
         loop {
-            current = current.div_ceil(64);
+            current = (current + 63) / 64; // Ceiling division
             sizes.push(current);
             depth += 1;
             if current <= 1 {
