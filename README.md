@@ -70,7 +70,7 @@ Add MinRX to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-minrx = "0.1.0"
+minrx = "0.2.0"
 ```
 
 ### Basic Usage

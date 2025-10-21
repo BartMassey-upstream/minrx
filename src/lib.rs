@@ -1,4 +1,4 @@
-#![doc(html_root_url = "https://docs.rs/minrx/0.1.0")]
+#![doc(html_root_url = "https://docs.rs/minrx/0.2.0")]
 
 //! MinRX: A minimal matcher for POSIX Extended Regular Expressions
 //!

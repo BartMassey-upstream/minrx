@@ -9,7 +9,7 @@ use std::iter::Peekable;
 use std::str::Chars;
 
 struct NState {
-    gen: usize,
+    generation: usize,
     boff: usize,
     substack: COWVec<Option<usize>>,
 }
@@ -17,7 +17,7 @@ struct NState {
 impl NState {
     fn new(allocator_size: usize) -> Self {
         Self {
-            gen: 0,
+            generation: 0,
             boff: 0,
             substack: COWVec::new(allocator_size),
         }
@@ -25,7 +25,7 @@ impl NState {
 
     fn clone_state(&self) -> Self {
         Self {
-            gen: self.gen,
+            generation: self.generation,
             boff: self.boff,
             substack: self.substack.clone(),
         }
@@ -36,7 +36,7 @@ pub struct Executor<'a> {
     regex: &'a Regex,
     flags: ExecFlags,
     suboff: usize,
-    gen: usize,
+    generation: usize,
     off: usize,
     chars: Peekable<Chars<'a>>,
     prev_char: Option<char>,
@@ -53,7 +53,7 @@ impl<'a> Executor<'a> {
             regex,
             flags,
             suboff,
-            gen: 0,
+            generation: 0,
             off: 0,
             chars: text.chars().peekable(),
             prev_char: None,
@@ -89,7 +89,7 @@ impl<'a> Executor<'a> {
                 break;
             }
 
-            self.gen += 1;
+            self.generation += 1;
             self.prev_char = next_char;
             self.chars.next(); // consume the character
             self.off += self.prev_char.map(|c| c.len_utf8()).unwrap_or(0);
@@ -122,8 +122,8 @@ impl<'a> Executor<'a> {
         if let Some(ref best) = self.best {
             let mut matches = Vec::with_capacity(self.regex.nsub);
             for i in 0..self.regex.nsub {
-                let start = best.get(self.suboff + i * 2);
-                let end = best.get(self.suboff + i * 2 + 1);
+                let start: Option<usize> = best.get(self.suboff + i * 2);
+                let end: Option<usize> = best.get(self.suboff + i * 2 + 1);
                 let regmatch = match (start, end) {
                     (Some(s), Some(e)) => Some(s..e),
                     _ => None,
@@ -153,8 +153,8 @@ impl<'a> Executor<'a> {
         let debug = std::env::var("MINRX_DEBUG").is_ok();
         if debug {
             eprintln!(
-                "[add] k={} nstk={} gen={} off={} node={:?} next_char={:?}",
-                k, _nstk, self.gen, self.off, node.node_type, next_char
+                "[add] k={} nstk={} generation={} off={} node={:?} next_char={:?}",
+                k, _nstk, self.generation, self.off, node.node_type, next_char
             );
         }
 
@@ -164,7 +164,7 @@ impl<'a> Executor<'a> {
                     let (newly, slot) = ncsv.insert(k);
                     if newly {
                         let mut new_state = ns.clone_state();
-                        new_state.gen = self.gen;
+                        new_state.generation = self.generation;
                         *slot = Some(new_state);
                         if debug {
                             eprintln!("  -> Char matched '{:?}', added to ncsv (newly)", c);
@@ -172,22 +172,22 @@ impl<'a> Executor<'a> {
                     } else {
                         // Update if newer generation or better state
                         if let Some(ref existing) = *slot {
-                            let existing_gen = existing.gen;
-                            if self.gen > existing.gen
-                                || (self.gen == existing.gen && ns.boff < existing.boff)
+                            let existing_gen = existing.generation;
+                            if self.generation > existing.generation
+                                || (self.generation == existing.generation && ns.boff < existing.boff)
                             {
                                 let mut new_state = ns.clone_state();
-                                new_state.gen = self.gen;
+                                new_state.generation = self.generation;
                                 *slot = Some(new_state);
                                 if debug {
                                     eprintln!(
-                                        "  -> Char matched '{:?}', updated in ncsv (gen {} > {})",
-                                        c, self.gen, existing_gen
+                                        "  -> Char matched '{:?}', updated in ncsv (generation {} > {})",
+                                        c, self.generation, existing_gen
                                     );
                                 }
                             } else if debug {
                                 eprintln!(
-                                    "  -> Char matched '{:?}', skipped (existing gen {})",
+                                    "  -> Char matched '{:?}', skipped (existing generation {})",
                                     c, existing_gen
                                 );
                             }
@@ -204,7 +204,7 @@ impl<'a> Executor<'a> {
                             let (newly, slot) = ncsv.insert(k);
                             if newly {
                                 let mut new_state = ns.clone_state();
-                                new_state.gen = self.gen;
+                                new_state.generation = self.generation;
                                 *slot = Some(new_state);
                                 if debug {
                                     eprintln!(
@@ -215,19 +215,19 @@ impl<'a> Executor<'a> {
                             } else {
                                 // Update if newer generation or better state
                                 if let Some(ref existing) = *slot {
-                                    let existing_gen = existing.gen;
-                                    if self.gen > existing.gen
-                                        || (self.gen == existing.gen && ns.boff < existing.boff)
+                                    let existing_gen = existing.generation;
+                                    if self.generation > existing.generation
+                                        || (self.generation == existing.generation && ns.boff < existing.boff)
                                     {
                                         let mut new_state = ns.clone_state();
-                                        new_state.gen = self.gen;
+                                        new_state.generation = self.generation;
                                         *slot = Some(new_state);
                                         if debug {
-                                            eprintln!("  -> CSet matched '{:?}', updated in ncsv (gen {} > {})", nc, self.gen, existing_gen);
+                                            eprintln!("  -> CSet matched '{:?}', updated in ncsv (generation {} > {})", nc, self.generation, existing_gen);
                                         }
                                     } else if debug {
                                         eprintln!(
-                                            "  -> CSet matched '{:?}', skipped (existing gen {})",
+                                            "  -> CSet matched '{:?}', skipped (existing generation {})",
                                             nc, existing_gen
                                         );
                                     }
@@ -243,7 +243,7 @@ impl<'a> Executor<'a> {
                 let (newly, slot) = self.epsv.insert(k);
                 let should_process = if newly {
                     let mut new_state = ns.clone_state();
-                    new_state.gen = self.gen;
+                    new_state.generation = self.generation;
                     *slot = Some(new_state);
                     if debug {
                         eprintln!("  -> Epsilon node added to epsv (newly)");
@@ -252,24 +252,24 @@ impl<'a> Executor<'a> {
                 } else {
                     // Update if newer generation or better state
                     if let Some(ref existing) = *slot {
-                        let existing_gen = existing.gen;
-                        if self.gen > existing.gen
-                            || (self.gen == existing.gen && ns.boff < existing.boff)
+                        let existing_gen = existing.generation;
+                        if self.generation > existing.generation
+                            || (self.generation == existing.generation && ns.boff < existing.boff)
                         {
                             let mut new_state = ns.clone_state();
-                            new_state.gen = self.gen;
+                            new_state.generation = self.generation;
                             *slot = Some(new_state);
                             if debug {
                                 eprintln!(
-                                    "  -> Epsilon node updated in epsv (gen {} > {})",
-                                    self.gen, existing_gen
+                                    "  -> Epsilon node updated in epsv (generation {} > {})",
+                                    self.generation, existing_gen
                                 );
                             }
                             true
                         } else {
                             if debug {
                                 eprintln!(
-                                    "  -> Epsilon node skipped (existing gen {})",
+                                    "  -> Epsilon node skipped (existing generation {})",
                                     existing_gen
                                 );
                             }
@@ -311,8 +311,8 @@ impl<'a> Executor<'a> {
                     let b = ns_clone.boff;
                     let e = self.off;
                     let should_update = if let Some(ref best) = self.best {
-                        let best_b = best.get(self.suboff);
-                        let best_e = best.get(self.suboff + 1);
+                        let best_b: Option<usize> = best.get(self.suboff);
+                        let best_e: Option<usize> = best.get(self.suboff + 1);
                         // Accept new match if: earlier start (leftmost) OR same start but longer (greedy)
                         match (best_b, best_e) {
                             (Some(bb), Some(be)) => b < bb || (b == bb && e > be),

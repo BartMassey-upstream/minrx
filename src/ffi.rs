@@ -26,7 +26,7 @@ pub struct minrx_regmatch_t {
 ///
 /// `rx` must be a valid pointer to uninitialized `minrx_regex_t` struct.
 /// `pattern` must be a valid null-terminated C string pointer.
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub unsafe extern "C" fn minrx_regcomp(
     rx: *mut minrx_regex_t,
     pattern: *const c_char,
@@ -67,7 +67,7 @@ pub unsafe extern "C" fn minrx_regcomp(
 /// `rx` must be a valid pointer to a `minrx_regex_t` initialized by `minrx_regcomp`.
 /// `text` must be a valid null-terminated C string pointer.
 /// If `pmatch` is not null, it must point to an array of at least `nmatch` elements.
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub unsafe extern "C" fn minrx_regexec(
     rx: *const minrx_regex_t,
     text: *const c_char,
@@ -126,7 +126,7 @@ pub unsafe extern "C" fn minrx_regexec(
 ///
 /// `rx` must be a valid pointer to a `minrx_regex_t` initialized by `minrx_regcomp`.
 /// After calling this function, `rx` must not be used with `minrx_regexec`.
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub unsafe extern "C" fn minrx_regfree(rx: *mut minrx_regex_t) {
     if !rx.is_null() {
         unsafe {
@@ -144,7 +144,7 @@ pub unsafe extern "C" fn minrx_regfree(rx: *mut minrx_regex_t) {
 /// # Safety
 ///
 /// If `errbuf` is not null, it must point to a buffer of at least `errbuf_size` bytes.
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub unsafe extern "C" fn minrx_regerror(
     errcode: c_int,
     _rx: *const minrx_regex_t,
@@ -194,7 +194,7 @@ pub unsafe extern "C" fn minrx_regerror(
 ///
 /// `rx` must be a valid pointer to uninitialized `minrx_regex_t` struct.
 /// `pattern` must be a valid pointer to a buffer of at least `npattern` bytes.
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub unsafe extern "C" fn minrx_regncomp(
     rx: *mut minrx_regex_t,
     npattern: libc::size_t,
@@ -236,7 +236,7 @@ pub unsafe extern "C" fn minrx_regncomp(
 /// `rx` must be a valid pointer to a `minrx_regex_t` initialized by `minrx_regcomp` or `minrx_regncomp`.
 /// `text` must be a valid pointer to a buffer of at least `ntext` bytes.
 /// If `pmatch` is not null, it must point to an array of at least `nmatch` elements.
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub unsafe extern "C" fn minrx_regnexec(
     rx: *const minrx_regex_t,
     ntext: libc::size_t,

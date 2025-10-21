@@ -1,8 +1,8 @@
 [package]
 name = "minrx"
-version = "0.1.0"
-edition = "2021"
-rust-version = "1.63"
+version = "0.2.0"
+edition = "2024"
+rust-version = "1.85"
 authors = ["Michael J. Haertel", "Rust conversion by Claude"]
 license = "BSD-2-Clause"
 description = "A minimal matcher for POSIX Extended Regular Expressions"
@@ -19,6 +19,8 @@ exclude = [
     "meson.build",
     "subprojects/",
     ".vscode/",
+    "blog-post.md",
+    "transcript.md",
 ]
 
 [dependencies]
