@@ -124,7 +124,6 @@ impl CSet {
         self.ranges = new_ranges;
     }
 
-
     pub fn add_char_class(&mut self, name: &str, flags: CompileFlags) -> bool {
         match name {
             "alnum" => self.add_alnum(flags),
@@ -369,8 +368,6 @@ impl CSet {
 
         Ok(())
     }
-
-
 }
 
 #[cfg(test)]

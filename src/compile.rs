@@ -339,7 +339,13 @@ impl<'a> Compiler<'a> {
     }
 
     // Create repetition for {m,n} where None represents unbounded
-    fn mkrep_count(&self, lh: Subexp, m_opt: Option<usize>, n_opt: Option<usize>, nstk: usize) -> Subexp {
+    fn mkrep_count(
+        &self,
+        lh: Subexp,
+        m_opt: Option<usize>,
+        n_opt: Option<usize>,
+        nstk: usize,
+    ) -> Subexp {
         // Validate bounds
         if let Some(m) = m_opt {
             if m > RE_DUP_MAX {
@@ -644,7 +650,6 @@ impl<'a> Compiler<'a> {
             }
         }
     }
-
 }
 
 pub fn compile(pattern: &str, flags: CompileFlags) -> Result<Regex, RegexError> {

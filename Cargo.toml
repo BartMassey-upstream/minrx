@@ -14,7 +14,6 @@ keywords = ["regex", "posix", "ere", "pattern", "matching"]
 categories = ["text-processing", "parsing"]
 exclude = [
     "*.cpp",
-    "*.h",
     "*.c",
     "Makefile",
     "meson.build",
@@ -25,6 +24,9 @@ exclude = [
 [dependencies]
 libc = "0.2"
 bitflags = "2.4"
+
+[dev-dependencies]
+version-sync = "0.9"
 
 [lib]
 name = "minrx"

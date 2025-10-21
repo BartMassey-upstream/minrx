@@ -24,7 +24,6 @@ impl<T> QVec<T> {
         self.qset.is_empty()
     }
 
-
     /// Insert an element, returning (was_new, mutable_reference)
     /// If was_new is true, the caller must initialize the reference
     pub fn insert(&mut self, k: usize) -> (bool, &mut Option<T>) {
@@ -41,13 +40,11 @@ impl<T> QVec<T> {
         self.qset.contains(k)
     }
 
-
     pub fn remove(&mut self) -> (usize, T) {
         let k = self.qset.remove();
         let data = self.storage[k].take().expect("QVec invariant violated");
         (k, data)
     }
-
 }
 
 #[cfg(test)]

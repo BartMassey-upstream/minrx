@@ -373,7 +373,10 @@ impl<'a> Executor<'a> {
                 NodeType::SubR => {
                     // Only save submatch if FIRSTSUB is not set or the submatch hasn't been captured yet
                     if !self.flags.contains(ExecFlags::FIRSTSUB)
-                        || ns_clone.substack.get(self.suboff + node.args[0] * 2).is_none()
+                        || ns_clone
+                            .substack
+                            .get(self.suboff + node.args[0] * 2)
+                            .is_none()
                     {
                         let mut nscopy = ns_clone.clone_state();
                         nscopy
@@ -482,7 +485,9 @@ impl<'a> Executor<'a> {
                                 let val0 = ns_clone.substack.get(nstk);
                                 let val1 = ns_clone.substack.get(nstk + 1);
                                 nscopy2.substack.put(nstk, val0);
-                                nscopy2.substack.put(nstk + 1, val1.map(|v| v.wrapping_sub(1)));
+                                nscopy2
+                                    .substack
+                                    .put(nstk + 1, val1.map(|v| v.wrapping_sub(1)));
                                 nscopy2.substack.put(nstk + 2, Some(self.off));
                                 self.add(ncsv, k - node.args[0], nstk + 3, &nscopy2, next_char);
                             } else if debug {
@@ -564,7 +569,11 @@ impl<'a> Executor<'a> {
     }
 }
 
-pub fn execute(regex: &Regex, text: &str, flags: ExecFlags) -> Result<Vec<Option<RegMatch>>, RegexError> {
+pub fn execute(
+    regex: &Regex,
+    text: &str,
+    flags: ExecFlags,
+) -> Result<Vec<Option<RegMatch>>, RegexError> {
     let mut executor = Executor::new(regex, text, flags);
     executor.execute()
 }

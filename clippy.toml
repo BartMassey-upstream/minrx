@@ -1,0 +1,2 @@
+# Allow clippy to suggest breaking API changes
+avoid-breaking-exported-api = false

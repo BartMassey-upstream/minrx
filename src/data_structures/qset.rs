@@ -60,7 +60,6 @@ impl QSet {
         true
     }
 
-
     pub fn insert(&mut self, k: usize) -> bool {
         let mut newly_inserted = false;
         let mut i = 0;

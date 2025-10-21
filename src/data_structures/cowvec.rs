@@ -31,8 +31,6 @@ impl<T: Clone + Default> COWVec<T> {
         // Clone-on-write: Rc::make_mut clones only if refcount > 1
         Rc::make_mut(&mut self.storage)[idx] = val;
     }
-
-
 }
 
 #[cfg(test)]

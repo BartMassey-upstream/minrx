@@ -1,4 +1,4 @@
-use minrx::{Regex, CompileFlags, ExecFlags};
+use minrx::{CompileFlags, ExecFlags, Regex};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Basic pattern matching
