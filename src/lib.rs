@@ -186,7 +186,7 @@ pub enum RegexError {
 
 impl RegexError {
     /// Returns a human-readable error message for this error code
-    pub fn message(&self) -> &'static str {
+    pub const fn message(&self) -> &'static str {
         match self {
             RegexError::Success => "success",
             RegexError::BadPat => "bad pattern",
@@ -354,7 +354,7 @@ impl Regex {
     /// Returns the number of capturing groups in the pattern
     ///
     /// This count does not include the overall match (group 0).
-    pub fn nsub(&self) -> usize {
+    pub const fn nsub(&self) -> usize {
         if self.nsub > 0 {
             self.nsub - 1
         } else {
