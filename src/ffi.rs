@@ -99,6 +99,7 @@ pub unsafe extern "C" fn minrx_regexec(
     match regex.exec(text_str, exec_flags) {
         Ok(matches) => {
             if !pmatch.is_null() {
+                // Fill in the matches we have
                 for (i, m) in matches.iter().enumerate().take(nmatch) {
                     unsafe {
                         match m {
@@ -111,6 +112,13 @@ pub unsafe extern "C" fn minrx_regexec(
                                 (*pmatch.add(i)).rm_eo = -1;
                             }
                         }
+                    }
+                }
+                // Initialize remaining slots to -1
+                for i in matches.len()..nmatch {
+                    unsafe {
+                        (*pmatch.add(i)).rm_so = -1;
+                        (*pmatch.add(i)).rm_eo = -1;
                     }
                 }
             }
@@ -269,6 +277,7 @@ pub unsafe extern "C" fn minrx_regnexec(
     match regex.exec(text_str, exec_flags) {
         Ok(matches) => {
             if !pmatch.is_null() {
+                // Fill in the matches we have
                 for (i, m) in matches.iter().enumerate().take(nmatch) {
                     unsafe {
                         match m {
@@ -281,6 +290,13 @@ pub unsafe extern "C" fn minrx_regnexec(
                                 (*pmatch.add(i)).rm_eo = -1;
                             }
                         }
+                    }
+                }
+                // Initialize remaining slots to -1
+                for i in matches.len()..nmatch {
+                    unsafe {
+                        (*pmatch.add(i)).rm_so = -1;
+                        (*pmatch.add(i)).rm_eo = -1;
                     }
                 }
             }
