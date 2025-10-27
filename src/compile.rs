@@ -600,8 +600,8 @@ impl<'a> Compiler<'a> {
                     lhs.push_back(Node::char_node('{', nstk));
                     self.next_char();
                 } else {
-                    // Without BRACE_COMPAT, { at start is always an error
-                    return (VecDeque::new(), 0, false, RegexError::BadRpt);
+                    // Without BRACE_COMPAT, { at start is an unbalanced brace error
+                    return (VecDeque::new(), 0, false, RegexError::EBrace);
                 }
             }
             Some('*') | Some('+') | Some('?') => {
